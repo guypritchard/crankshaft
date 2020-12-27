@@ -40,16 +40,15 @@ export class BedrockRunner {
     public async start(): Promise<void> {
         const process = new Promise((resolve, reject) => {
             this.bedrock = spawn(path.join(this.basePath, BedrockRunner.bedrockExecutable));
+            console.log("Started");
             this.bedrock.stdout.on('data', (data: string) => {
                 this._stdout.push(data);
+                console.log(data.toString());
             });
 
             this.bedrock.stderr.on('data', (data: string) => {
                 this._stderr.push(data);
-            });
-
-            this.bedrock.on('spawn', () => {
-                console.log("Started");
+                console.error(data);
             });
 
             this.bedrock.on('exit', (code: number) => {
