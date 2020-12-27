@@ -1,9 +1,9 @@
 import express from "express";
 import fs from "fs";
 import path from "path";
-import { BedrockConfiguration } from "./BedrockConfiguration";
-import { BedrockDownloadPageParser } from "./BedrockDownloadPageParser";
-import { BedrockState } from "./BedrockState";
+import { BedrockConfiguration } from "./server/BedrockConfiguration";
+import { BedrockDownloadPageParser } from "./server/BedrockDownloadPageParser";
+import { BedrockState } from "./server/BedrockState";
 import { JSONFile } from "./utils/JSONFile";
 
 console.log("Starting");
@@ -26,7 +26,7 @@ app.post("/server/update", (request, response) => {
   state.update().then((updated) => response.send({ updated }));
 });
 
-app.get("/version", (request, response) => {
+app.get("/bedrock/version", (request, response) => {
   const parser = new BedrockDownloadPageParser();
   parser.getBedrockVersions().then((v) => response.send(v));
 });

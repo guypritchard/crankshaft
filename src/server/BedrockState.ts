@@ -3,8 +3,7 @@ import { BedrockDownloader } from "./BedrockDownloader";
 import { BedrockDownloadPageParser } from "./BedrockDownloadPageParser";
 import { BedrockInstaller } from "./BedrockInstaller";
 import { BedrockRunner } from "./BedrockRunner";
-import { download } from "./BedrockUpdater";
-import { JSONFile } from "./utils/JSONFile";
+import { JSONFile } from "../utils/JSONFile";
 
 export class BedrockState {
   runner: BedrockRunner;
@@ -40,7 +39,7 @@ export class BedrockState {
 
     if (windowsBuild[0].version !== currentVersion?.version) {
       console.log("Downloading...");
-      await downloader.download(windowsBuild[0]);
+      await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
       console.log("Installing...");
       await installer.install(
         windowsBuild[0],

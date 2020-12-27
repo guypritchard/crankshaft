@@ -2,7 +2,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import { BedrockVersion } from "./BedrockVersion";
-import { JSONFile } from "./utils/JSONFile";
+import { JSONFile } from "../utils/JSONFile";
 
 export class BedrockRunner {
   static readonly bedrockExecutable = "bedrock_server.exe";
@@ -40,7 +40,7 @@ export class BedrockRunner {
   }
 
   public async start(): Promise<void> {
-    const process = new Promise((resolve, reject) => {
+    const serverProcess = new Promise((resolve, reject) => {
       this.bedrock = spawn(
         path.join(this.basePath, BedrockRunner.bedrockExecutable)
       );
@@ -59,6 +59,6 @@ export class BedrockRunner {
       });
     });
 
-    await process;
+    await serverProcess;
   }
 }

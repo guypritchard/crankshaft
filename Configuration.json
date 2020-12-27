@@ -1,5 +1,6 @@
 {
-   "basePath": "C:\\MCServer",
+   "basePath": "C:\\crankshaft\\bedrock",
    "updateBeforeStart": true,
-   "port": 3389
+   "port": 3389,
+   "versionCache": "C:\\crankshaft\\versions"
 }
