@@ -1,0 +1,4 @@
+build
+BedrockServer
+node_modules
+*.zip
