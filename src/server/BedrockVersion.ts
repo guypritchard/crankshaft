@@ -1,5 +1,4 @@
-import { Platform } from "./Platform";
-
+import { Platform } from './Platform';
 
 export interface BedrockVersion {
     platform: Platform;

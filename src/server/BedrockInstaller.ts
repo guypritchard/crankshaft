@@ -1,8 +1,8 @@
-import { BedrockVersion } from "./BedrockVersion";
+import { BedrockVersion } from './BedrockVersion';
 import unzipper from 'unzipper';
 import fs from 'fs';
 import path from 'path';
-import { JSONFile } from "../utils/JSONFile";
+import { JSONFile } from '../utils/JSONFile';
 
 export class BedrockInstaller {
     public async install(version: BedrockVersion, basePath: string): Promise<void> {
@@ -12,9 +12,8 @@ export class BedrockInstaller {
                 .on('entry', function (entry) {
                     const fileName = entry.path;
                     const type = entry.type; // 'Directory' or 'File'
-                    const size = entry.vars.uncompressedSize; // There is also compressedSize;
                     if (type === 'File') {
-                        entry.pipe(fs.createWriteStream(path.join(basePath, fileName), {flags:'w'}));
+                        entry.pipe(fs.createWriteStream(path.join(basePath, fileName), { flags: 'w' }));
                     } else {
                         if (!fs.existsSync(path.join(basePath, entry.path))) {
                             fs.mkdirSync(path.join(basePath, entry.path), { recursive: true });
