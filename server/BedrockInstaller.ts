@@ -1,13 +1,13 @@
 import { BedrockVersion } from './BedrockVersion';
-import unzipper from 'unzipper';
-import fs from 'fs';
-import path from 'path';
+import * as unzipper from 'unzipper';
+import * as fs from 'fs';
+import * as path from 'path';
 import { JSONFile } from './utils/JSONFile';
 
 export class BedrockInstaller {
-    public async install(version: BedrockVersion, basePath: string): Promise<void> {
+    public async install(version: BedrockVersion, versionCache: string, basePath: string): Promise<void> {
         const p = new Promise((resolve, reject) => {
-            fs.createReadStream(`./${version.filename}`)
+            fs.createReadStream(path.join(versionCache, version.filename))
                 .pipe(unzipper.Parse())
                 .on('entry', function (entry) {
                     const fileName = entry.path;

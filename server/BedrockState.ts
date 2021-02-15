@@ -36,7 +36,7 @@ export class BedrockState {
             console.log('Downloading...');
             await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
             console.log('Installing...');
-            await installer.install(windowsBuild[0], this.configuration?.basePath ?? '');
+            await installer.install(windowsBuild[0], this.configuration?.versionCache, this.configuration?.basePath);
             return true;
         }
 
