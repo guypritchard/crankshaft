@@ -2,7 +2,7 @@ import { BedrockVersion } from './BedrockVersion';
 import unzipper from 'unzipper';
 import fs from 'fs';
 import path from 'path';
-import { JSONFile } from '../utils/JSONFile';
+import { JSONFile } from './utils/JSONFile';
 
 export class BedrockInstaller {
     public async install(version: BedrockVersion, basePath: string): Promise<void> {

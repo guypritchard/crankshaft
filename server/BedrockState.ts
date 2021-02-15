@@ -46,7 +46,6 @@ export class BedrockState {
 
     public async start(): Promise<void> {
         await this.update();
-        console.log('Starting...');
         this.process = this.runner.start();
     }
 
