@@ -35,7 +35,11 @@ export class BedrockRunner {
     }
 
     public version(): BedrockVersion | null {
-        return JSONFile.read<BedrockVersion>(path.join(this.basePath, 'version.json'));
+        try {
+            return JSONFile.read<BedrockVersion>(path.join(this.basePath, 'version.json'));
+        } catch (error) {
+            return null;
+        }
     }
 
     public async start(): Promise<void> {

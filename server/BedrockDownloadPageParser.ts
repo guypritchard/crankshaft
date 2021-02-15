@@ -39,11 +39,13 @@ export class BedrockDownloadPageParser {
             let minecraftVersion = l.slice(BedrockDownloadPageParser.PartialFileName.length);
             minecraftVersion = minecraftVersion.slice(0, minecraftVersion.lastIndexOf('.'));
 
+            const filename = path.basename(url.parse(l).pathname as string);
+
             return {
                 version: minecraftVersion,
                 url: l,
                 platform: l.indexOf('win') === -1 ? 'linux' : 'windows',
-                filename: path.basename(url.parse(l).pathname as string),
+                filename: filename,
             } as BedrockVersion;
         });
 

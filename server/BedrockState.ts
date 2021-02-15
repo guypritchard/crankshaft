@@ -33,7 +33,6 @@ export class BedrockState {
         console.log('Latest windows version:' + windowsBuild[0].version);
 
         if (windowsBuild[0].version !== currentVersion?.version) {
-            console.log('Downloading...');
             await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
             console.log('Installing...');
             await installer.install(windowsBuild[0], this.configuration?.versionCache, this.configuration?.basePath);
