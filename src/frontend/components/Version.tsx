@@ -6,17 +6,13 @@ export interface VersionProps {
 }
 
 export const Version: React.FC<VersionProps> = (props) => {
-    if (props.version == null){
+    if (props.version == null) {
         return <div>Unknown</div>;
     }
 
     return (
-        <div className="nes-container is-rounded is-dark with-title">
-            <p className="title">Version</p>
-            <div>{props.version.filename}</div>
-            <div>{props.version.version}</div>
-            <div>{props.version.platform}</div>
-            <div>{props.version.url}</div>
+        <div className="nes-badge -right">
+            <span className="is-primary">{props.version.build}</span>
         </div>
     );
 };

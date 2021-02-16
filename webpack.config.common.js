@@ -1,3 +1,5 @@
+const CopyPlugin = require('copy-webpack-plugin');
+
 module.exports = {
     entry: './src/frontend/index.tsx',
     output: {
@@ -10,7 +12,10 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js', '.json'],
     },
 
-    plugins: [],
+    plugins: [
+        new CopyPlugin([{ from: 'src/frontend/index.html', to: 'index.html' }]),
+        new CopyPlugin([{ from: 'src/frontend/images/favicon.ico', to: 'favicon.ico' }]),
+    ],
 
     module: {
         rules: [

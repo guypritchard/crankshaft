@@ -3,8 +3,10 @@ import { BedrockDownloader } from './BedrockDownloader';
 import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
 import { BedrockInstaller } from './BedrockInstaller';
 import { BedrockRunner } from './BedrockRunner';
+import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
 
 export class BedrockState {
+    config: BedrockWorldConfiguration | null = null;
     runner: BedrockRunner;
     process: Promise<void> = Promise.resolve();
     constructor(private configuration: BedrockConfiguration) {
@@ -36,10 +38,12 @@ export class BedrockState {
             await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
             console.log('Installing...');
             await installer.install(windowsBuild[0], this.configuration?.versionCache, this.configuration?.basePath);
+            this.config = new BedrockWorldConfiguration(this.configuration.basePath);
             return true;
         }
 
         console.log('Current version already downloaded.');
+        this.config = new BedrockWorldConfiguration(this.configuration.basePath);
         return false;
     }
 
@@ -58,6 +62,8 @@ export class BedrockState {
             pid: this.runner.pid,
             stdout: this.runner.stdout,
             version: this.runner.version(),
+            crankShaftConfig: this.configuration,
+            bedrockConfig: this.config,
         };
     }
 }

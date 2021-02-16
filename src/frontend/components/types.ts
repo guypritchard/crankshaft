@@ -5,6 +5,7 @@ export interface ServerState {
 }
 export interface BedrockVersion {
     platform: Platform;
+    build: string;
     version: string;
     url: string;
     filename: string;

@@ -12,7 +12,7 @@ body {
     margin-top: 80px;
   }
 
-  header > .container {
+  header {
     display: flex;
     align-items: baseline;
     max-width: 980px;
@@ -43,9 +43,6 @@ header > .container {
 
 header > .container > .nav-brand {
   margin-right: auto;
-}
-header > .container > .social-button {
-  margin-left: auto;
 }
 
 .nav-brand .brand-logo {
@@ -83,8 +80,9 @@ header.sticky .nav-brand p {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  display:inline-block;    
+  display:inline-block;
+  margin-right: 1rem;
 
-  width: 2.0rem;
-  height: 2.0rem;
+  width: 2.5rem;
+  height: 2.5rem;
  }

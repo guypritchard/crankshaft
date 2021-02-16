@@ -4,7 +4,7 @@ import { BedrockVersion } from './types';
 import { Version } from './Version';
 
 export const CurrentBedrockRelease: React.FC = () => {
-    const { isLoading, data } = useFetch<BedrockVersion[]>('http://localhost:5000/bedrock/version');
+    const { isLoading, data } = useFetch<BedrockVersion[]>('/bedrock/version');
 
     return isLoading ? (
         <div>Loading...</div>

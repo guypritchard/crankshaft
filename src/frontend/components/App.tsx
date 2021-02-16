@@ -6,12 +6,9 @@ import { Header } from './Header';
 
 export const App: React.FC = () => (
     <>
-        <div>
-            <Header />
-        </div>
-
         <div className="container">
-            <CurrentBedrockRelease />
+            <Header />
+            {/* <CurrentBedrockRelease /> */}
             <Server />
         </div>
     </>

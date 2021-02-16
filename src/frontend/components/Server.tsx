@@ -4,13 +4,15 @@ import { ServerState } from './types';
 import { Version } from './Version';
 
 export const Server: React.FC = () => {
-    const { isLoading, data } = useFetch<ServerState>('http://localhost:5000/server');
+    const { isLoading, data } = useFetch<ServerState>('/server');
 
     return isLoading ? (
         <div>Loading...</div>
     ) : (
         <section className="nes-container is-rounded is-dark">
-            <h2>Hosted Server</h2>
+            <h1>
+                Hosted Server <Version version={data.version} />
+            </h1>
             <div>{data.pid}</div>
             <div>
                 <ul>
@@ -19,7 +21,6 @@ export const Server: React.FC = () => {
                     ))}
                 </ul>
             </div>
-            <Version version={data.version} />
         </section>
     );
 };

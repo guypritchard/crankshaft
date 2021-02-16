@@ -40,9 +40,12 @@ export class BedrockDownloadPageParser {
             minecraftVersion = minecraftVersion.slice(0, minecraftVersion.lastIndexOf('.'));
 
             const filename = path.basename(url.parse(l).pathname as string);
+            const baseVersionRegEx = /(\d+\.)(\d+\.)(\d+\.)(\d+)/;
+            const match = filename.match(baseVersionRegEx);
 
             return {
                 version: minecraftVersion,
+                build: match?.length ? match[0] : 'unknown',
                 url: l,
                 platform: l.indexOf('win') === -1 ? 'linux' : 'windows',
                 filename: filename,
