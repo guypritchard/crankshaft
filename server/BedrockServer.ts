@@ -1,7 +1,7 @@
 import { BedrockConfiguration } from './BedrockConfiguration';
 import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
 import { BedrockState } from './BedrockState';
-import express from 'express';
+import express, { request } from 'express';
 
 export class CrankShaft {
     constructor(app: express.Express, configuration: BedrockConfiguration) {
@@ -15,8 +15,16 @@ export class CrankShaft {
             response.send(state.state());
         });
 
-        app.post('/server/update', (request, response) => {
-            state.update().then((updated) => response.send({ updated }));
+        app.post('/server/commands/update', (request, response) => {
+            state.update().then(() => response.send(state.state()));
+        });
+
+        app.post('/server/commands/stop', (request, response) => {
+            state.stop().then(() => response.send(state.state()));
+        });
+
+        app.post('/server/commands/start', (request, response) => {
+            state.start().then(() => response.send(state.state()));
         });
 
         app.get('/bedrock/version', (request, response) => {

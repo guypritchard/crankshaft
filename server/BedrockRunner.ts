@@ -43,6 +43,9 @@ export class BedrockRunner {
     }
 
     public async start(): Promise<void> {
+        this._stdout = [];
+        this._stderr = [];
+
         const serverProcess = new Promise((resolve, reject) => {
             console.log('Starting Bedrock Server...');
             this.bedrock = spawn(path.join(this.basePath, BedrockRunner.bedrockExecutable));

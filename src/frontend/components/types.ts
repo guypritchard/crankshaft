@@ -1,5 +1,6 @@
 export interface ServerState {
     pid: number;
+    state: number;
     stdout: string[];
     version: BedrockVersion | null;
 }
