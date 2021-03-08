@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Status } from './Status';
 import { ServerState } from './types';
 import { Version } from './Version';
 
@@ -36,9 +37,18 @@ export const Server: React.FC = () => {
     ) : (
         <section className="nes-container is-rounded is-dark">
             <h1>
-                Hosted Server <Version version={serverState.version} />
+                Hosted Server <Status status={serverState.state}></Status> <Version version={serverState.version} />
             </h1>
-            <div>{serverState.pid}</div>
+            <label htmlFor="world_select">World:</label>
+            <div className="nes-select is-dark">
+                <select value={serverState.bedrockConfig.worldName} id="world_select">
+                    {serverState.bedrockConfig.serverWorlds.map((w) => (
+                        <option className="nes-pointer" key={w}>
+                            {w}
+                        </option>
+                    ))}
+                </select>
+            </div>
             <div>
                 <ul>
                     {serverState.stdout.map((l) => (

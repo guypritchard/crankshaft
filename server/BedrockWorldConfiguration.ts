@@ -4,6 +4,7 @@ import * as path from 'path';
 export class BedrockWorldConfiguration {
     private worldName = '';
     private serverConfiguration = '';
+    private serverWorlds: string[] = [];
 
     public get world(): string {
         return this.worldName;
@@ -15,12 +16,21 @@ export class BedrockWorldConfiguration {
         this.save();
     }
 
+    public get worlds(): string[] {
+        return this.serverWorlds;
+    }
+
     private get fileName(): string {
         return path.join(this.basePath, 'server.properties');
     }
 
     constructor(private basePath: string) {
         this.parse();
+        this.serverWorlds = this.loadWorlds(basePath);
+    }
+
+    private loadWorlds(basePath: string): string[] {
+        return fs.readdirSync(path.join(basePath, 'worlds'));
     }
 
     private parse(): string {

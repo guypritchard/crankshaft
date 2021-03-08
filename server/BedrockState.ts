@@ -5,7 +5,12 @@ import { BedrockInstaller } from './BedrockInstaller';
 import { BedrockRunner } from './BedrockRunner';
 import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
 
-export enum ServerState { Unknown, Running, Stopped };
+export enum ServerState {
+    Unknown = 0,
+    Running = 1,
+    Stopped = 2,
+}
+
 export class BedrockState {
     config: BedrockWorldConfiguration | null = null;
     runner: BedrockRunner;
@@ -36,23 +41,24 @@ export class BedrockState {
         console.log('Installed version: ' + currentVersion?.version);
         console.log('Latest windows version:' + windowsBuild[0].version);
 
+        this.config = new BedrockWorldConfiguration(this.configuration.basePath);
+
         if (windowsBuild[0].version !== currentVersion?.version) {
             await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
             console.log('Installing...');
             await this.stop();
             await installer.install(windowsBuild[0], this.configuration?.versionCache, this.configuration?.basePath);
-            this.config = new BedrockWorldConfiguration(this.configuration.basePath);
             await this.start();
             return true;
         }
 
         console.log('Current version already installed.');
-        this.config = new BedrockWorldConfiguration(this.configuration.basePath);
         return false;
     }
 
     public async start(): Promise<void> {
         this.process = this.runner.start();
+        this.config = new BedrockWorldConfiguration(this.configuration.basePath);
         this.serverState = ServerState.Running;
     }
 
