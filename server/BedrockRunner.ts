@@ -57,6 +57,7 @@ export class BedrockRunner {
                 let endsWithPartial = false;
                 const hadAPartial = partialLine != '';
 
+                // This code is trash - needs looking at...
                 if (!totalLogLine.endsWith('\r\n')) {
                     endsWithPartial = true;
                 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Status } from './Status';
-import { ServerState } from './types';
+import { ServerState, ServerStatus } from './types';
 import { Version } from './Version';
 
 export const Server: React.FC = () => {
@@ -39,6 +39,7 @@ export const Server: React.FC = () => {
             <h1>
                 Hosted Server <Status status={serverState.state}></Status> <Version version={serverState.version} />
             </h1>
+
             <label htmlFor="world_select">World:</label>
             <div className="nes-select is-dark">
                 <select value={serverState.bedrockConfig.worldName} id="world_select">
@@ -55,12 +56,17 @@ export const Server: React.FC = () => {
                         <li key={l}>{l}</li>
                     ))}
                 </ul>
-                <button type="button" className="nes-btn is-error" onClick={() => command('stop')}>
-                    Stop
-                </button>
-                <button type="button" className="nes-btn is-success" onClick={() => command('start')}>
-                    Start
-                </button>
+
+                {serverState.state == ServerStatus.Running ? (
+                    <button type="button" className="nes-btn is-error" onClick={() => command('stop')}>
+                        Stop
+                    </button>
+                ) : (
+                    <button type="button" className="nes-btn is-success" onClick={() => command('start')}>
+                        Start
+                    </button>
+                )}
+
                 <button type="button" className="nes-btn is-primary" onClick={() => command('update')}>
                     Update
                 </button>
