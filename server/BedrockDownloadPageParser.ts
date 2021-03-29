@@ -1,8 +1,8 @@
 import * as $ from 'cheerio';
 import fetch from 'node-fetch';
-import { BedrockVersion } from './BedrockVersion';
 import * as url from 'url';
 import * as path from 'path';
+import { BedrockVersion } from '../interfaces/types';
 
 export class BedrockDownloadPageParser {
     static readonly Url = 'https://minecraft.net/en-us/download/server/bedrock/';

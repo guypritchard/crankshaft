@@ -1,7 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { WorldConfiguration } from '../interfaces/types';
 
-export class BedrockWorldConfiguration {
+export class BedrockWorldConfiguration implements WorldConfiguration {
     private worldName = '';
     private serverConfiguration = '';
     private serverWorlds: string[] = [];

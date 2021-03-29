@@ -1,0 +1,6 @@
+{
+   "basePath": "C:\\crankshaft\\bedrock",
+   "updateBeforeStart": true,
+   "serverPort": 5000,
+   "versionCache": "C:\\crankshaft\\versions"
+}

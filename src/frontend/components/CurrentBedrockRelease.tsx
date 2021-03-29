@@ -1,6 +1,6 @@
 import React from 'react';
 import useFetch from 'react-fetch-hook';
-import { BedrockVersion } from './types';
+import { BedrockVersion } from '../../../interfaces/types';
 import { Version } from './Version';
 
 export const CurrentBedrockRelease: React.FC = () => {

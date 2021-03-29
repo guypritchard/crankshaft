@@ -1,7 +1,7 @@
-import { BedrockVersion } from './BedrockVersion';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 import * as path from 'path';
+import { BedrockVersion } from '../interfaces/types';
 
 export class BedrockDownloader {
     public async download(versionCache: string, version: BedrockVersion): Promise<void> {

@@ -1,22 +1,16 @@
-import { BedrockConfiguration } from './BedrockConfiguration';
 import { BedrockDownloader } from './BedrockDownloader';
 import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
 import { BedrockInstaller } from './BedrockInstaller';
 import { BedrockRunner } from './BedrockRunner';
+import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } from '../interfaces/types';
 import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
 
-export enum ServerState {
-    Unknown = 0,
-    Running = 1,
-    Stopped = 2,
-}
-
 export class BedrockState {
-    config: BedrockWorldConfiguration | null = null;
+    config: WorldConfiguration | null = null;
     runner: BedrockRunner;
     process: Promise<void> = Promise.resolve();
-    serverState: ServerState = ServerState.Unknown;
-    constructor(private configuration: BedrockConfiguration) {
+    serverState: ServerStatus = ServerStatus.Unknown;
+    constructor(private configuration: ServerConfiguration) {
         this.runner = new BedrockRunner(this.configuration?.basePath ?? '');
     }
 
@@ -59,16 +53,16 @@ export class BedrockState {
     public async start(): Promise<void> {
         this.process = this.runner.start();
         this.config = new BedrockWorldConfiguration(this.configuration.basePath);
-        this.serverState = ServerState.Running;
+        this.serverState = ServerStatus.Running;
     }
 
     public async stop(): Promise<void> {
         this.runner.stop();
         await this.process;
-        this.serverState = ServerState.Stopped;
+        this.serverState = ServerStatus.Stopped;
     }
 
-    public state(): unknown {
+    public state(): ServerState {
         return {
             state: this.serverState,
             pid: this.runner.pid,

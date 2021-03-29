@@ -1,5 +1,5 @@
 import React from 'react';
-import { BedrockVersion } from './types';
+import { BedrockVersion } from '../../../interfaces/types';
 
 export interface VersionProps {
     version: BedrockVersion;

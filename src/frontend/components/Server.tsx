@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Status } from './Status';
-import { ServerState, ServerStatus } from './types';
+import { BedrockVersion, ServerState, ServerStatus, versionEqual } from '../../../interfaces/types';
 import { Version } from './Version';
 
-export const Server: React.FC = () => {
+export interface ServerProps {
+    installers: BedrockVersion[];
+}
+
+export const Server: React.FC<ServerProps> = (props) => {
     const [state, setState] = useState<number>(0);
     const [serverState, setServerState] = useState<ServerState>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -11,14 +15,17 @@ export const Server: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
-            const response = await fetch('/server');
+            const response = await fetch('/servers/0');
             if (response.ok) {
                 const responseState = await response.json();
                 setServerState(responseState);
                 if (responseState?.state !== state) {
                     setState(responseState.state);
                 }
+            } else {
+                console.error(`${response.status}:${response.statusText}`);
             }
+
             setIsLoading(false);
         };
 
@@ -26,7 +33,7 @@ export const Server: React.FC = () => {
     }, [state]);
 
     const command = async (command: string) => {
-        const response = await fetch(`/server/commands/${command}`, { method: 'POST' });
+        const response = await fetch(`/servers/0/commands/${command}`, { method: 'POST' });
         if (response.ok) {
             setServerState(await response.json());
         }
@@ -42,8 +49,8 @@ export const Server: React.FC = () => {
 
             <label htmlFor="world_select">World:</label>
             <div className="nes-select is-dark">
-                <select value={serverState.bedrockConfig.worldName} id="world_select">
-                    {serverState.bedrockConfig.serverWorlds.map((w) => (
+                <select value={serverState?.bedrockConfig.world} id="world_select">
+                    {serverState?.bedrockConfig.worlds.map((w) => (
                         <option className="nes-pointer" key={w}>
                             {w}
                         </option>
@@ -51,11 +58,12 @@ export const Server: React.FC = () => {
                 </select>
             </div>
             <div>
-                <ul>
-                    {serverState.stdout.map((l) => (
-                        <li key={l}>{l}</li>
+                <div className="nes-container is-rounded is-dark">
+                    {serverState?.stdout.length > 10 && <div>...</div>}
+                    {serverState?.stdout.slice(Math.max(serverState.stdout.length - 10, 0)).map((l) => (
+                        <div key={l}>{l}</div>
                     ))}
-                </ul>
+                </div>
 
                 {serverState.state == ServerStatus.Running ? (
                     <button type="button" className="nes-btn is-error" onClick={() => command('stop')}>
@@ -67,9 +75,11 @@ export const Server: React.FC = () => {
                     </button>
                 )}
 
-                <button type="button" className="nes-btn is-primary" onClick={() => command('update')}>
-                    Update
-                </button>
+                {versionEqual(props.installers, serverState.version) === false && (
+                    <button type="button" className="nes-btn is-primary" onClick={() => command('update')}>
+                        Update
+                    </button>
+                )}
             </div>
         </section>
     );

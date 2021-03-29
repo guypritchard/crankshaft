@@ -1,5 +1,5 @@
 import React from 'react';
-import { ServerStatus } from './types';
+import { ServerStatus } from '../../../interfaces/types';
 
 export interface StatusProps {
     status: ServerStatus;

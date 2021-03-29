@@ -1,7 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { BedrockVersion } from './BedrockVersion';
+import { BedrockVersion } from '../interfaces/types';
 import { JSONFile } from './utils/JSONFile';
 
 export class BedrockRunner {
