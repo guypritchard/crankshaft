@@ -29,6 +29,7 @@ export const versionEqual = (allVersions: BedrockVersion[], version: BedrockVers
 export interface WorldConfiguration {
     world: string;
     worlds: string[];
+    setCurrentWorld(world: string): void;
 }
 
 export interface ServerConfiguration {

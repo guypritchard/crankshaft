@@ -3,22 +3,14 @@ import * as path from 'path';
 import { WorldConfiguration } from '../interfaces/types';
 
 export class BedrockWorldConfiguration implements WorldConfiguration {
-    private worldName = '';
+    public world = '';
+    public worlds: string[] = [];
     private serverConfiguration = '';
-    private serverWorlds: string[] = [];
 
-    public get world(): string {
-        return this.worldName;
-    }
-
-    public set world(name: string) {
-        this.serverConfiguration.replace(this.worldName, name);
-        this.worldName = name;
+    public setCurrentWorld(name: string): void {
+        this.serverConfiguration.replace(this.world, name);
+        this.world = name;
         this.save();
-    }
-
-    public get worlds(): string[] {
-        return this.serverWorlds;
     }
 
     private get fileName(): string {
@@ -27,7 +19,7 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
 
     constructor(private basePath: string) {
         this.parse();
-        this.serverWorlds = this.loadWorlds(basePath);
+        this.worlds = this.loadWorlds(basePath);
     }
 
     private loadWorlds(basePath: string): string[] {
@@ -44,7 +36,7 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
             const worldName = 'level-name=';
             const start = this.serverConfiguration.indexOf(worldName) + worldName.length;
             const end = this.serverConfiguration.indexOf('\r\n', start);
-            this.worldName = this.serverConfiguration.slice(start, end);
+            this.world = this.serverConfiguration.slice(start, end);
         }
 
         return '';
