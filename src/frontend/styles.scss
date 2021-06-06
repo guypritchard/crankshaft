@@ -21,6 +21,8 @@ body {
     transition: all 0.2s ease;
   }
   
+
+  
 /* Header */
 header {
   position: fixed;
@@ -85,4 +87,12 @@ header.sticky .nav-brand p {
 
   width: 2.5rem;
   height: 2.5rem;
+ }
+
+ .crankshaft-status {
+   min-height: 21rem;
+ }
+
+ .crankshaft-badge {
+   font-size: 0.75rem;
  }

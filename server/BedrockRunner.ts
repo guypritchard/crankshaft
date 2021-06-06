@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { BedrockVersion } from '../interfaces/types';
 import { JSONFile } from './utils/JSONFile';
+import { wait } from './utils/Wait';
 
 export class BedrockRunner {
     static readonly bedrockExecutable = 'bedrock_server.exe';
@@ -31,6 +32,14 @@ export class BedrockRunner {
     public stop(): void {
         if (this.bedrock != null) {
             this.bedrock.stdin.write('stop\r\n');
+        }
+    }
+
+    public async backup(): Promise<void> {
+        if (this.bedrock != null) {
+            this.bedrock.stdin.write('save hold\r\n');
+            await wait(10 * 1000);
+            this.bedrock.stdin.write('save resume\r\n');
         }
     }
 

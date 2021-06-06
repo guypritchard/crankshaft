@@ -14,6 +14,14 @@ export class BedrockState {
         this.runner = new BedrockRunner(this.configuration?.basePath ?? '');
     }
 
+    public async backup(): Promise<void> {
+        if (this.serverState === ServerStatus.Running) {
+            await this.runner.backup();
+        } else {
+            throw new Error("Server isn't running");
+        }
+    }
+
     public async update(): Promise<boolean> {
         const currentVersion = this.runner.version();
         const parser = new BedrockDownloadPageParser();

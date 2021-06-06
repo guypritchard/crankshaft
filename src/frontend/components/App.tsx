@@ -16,7 +16,7 @@ export const App: React.FC = () => {
                         <p>Loading...</p>
                     </div>
                 ) : (
-                    <Server installers={data} />
+                    <Server installers={data} index={0} />
                 )}
             </div>
         </>

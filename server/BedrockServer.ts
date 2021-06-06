@@ -31,6 +31,10 @@ export class CrankShaft {
             state.start().then(() => response.send(state.state()));
         });
 
+        app.post('/servers/:id/commands/backup', (request, response) => {
+            state.backup().then(() => response.send(state.state()));
+        });
+
         app.get('/bedrock/versions', (request, response) => {
             const parser = new BedrockDownloadPageParser();
             parser.getBedrockVersions().then((v) => response.send(v));
