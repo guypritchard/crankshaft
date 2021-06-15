@@ -13,8 +13,11 @@ module.exports = {
     },
 
     plugins: [
-        new CopyPlugin([{ from: 'src/frontend/index.html', to: 'index.html' }]),
-        new CopyPlugin([{ from: 'src/frontend/images/favicon.ico', to: 'favicon.ico' }]),
+        new CopyPlugin({
+            patterns: [
+                { from: 'src/frontend/index.html', to: 'index.html' },
+                { from: 'src/frontend/images/favicon.ico', to: 'favicon.ico' },
+        ]}),
     ],
 
     module: {

@@ -22,6 +22,32 @@ export class BedrockState {
         }
     }
 
+    public async install(): Promise<boolean> {
+        const parser = new BedrockDownloadPageParser();
+        const downloader = new BedrockDownloader();
+        const installer = new BedrockInstaller();
+
+        console.log('Checking current Bedrock Server version.');
+        const builds = await parser.getBedrockVersions();
+
+        if (builds.length === 0) {
+            throw new Error('No builds found');
+        }
+
+        const windowsBuild = builds.filter((b) => b.platform === 'windows');
+        if (windowsBuild.length === 0) {
+            throw new Error('No compatible builds found.');
+        }
+        this.config = new BedrockWorldConfiguration(this.configuration.basePath);
+
+        await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
+        console.log('Installing...');
+        await this.stop();
+        await installer.install(windowsBuild[0], this.configuration?.versionCache, this.configuration?.basePath);
+        return true;
+    }
+
+
     public async update(): Promise<boolean> {
         const currentVersion = this.runner.version();
         const parser = new BedrockDownloadPageParser();
@@ -59,6 +85,11 @@ export class BedrockState {
     }
 
     public async start(): Promise<void> {
+        if (this.runner.version() == null) {
+            console.log('No bedrock installed -- installing.');
+            await this.install();
+        }
+
         this.process = this.runner.start();
         this.config = new BedrockWorldConfiguration(this.configuration.basePath);
         this.serverState = ServerStatus.Running;

@@ -23,14 +23,20 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
     }
 
     private loadWorlds(basePath: string): string[] {
-        return fs.readdirSync(path.join(basePath, 'worlds'));
+        try {
+            return fs.readdirSync(path.join(basePath, 'worlds'));
+        } catch (error) {
+            return [];
+        }
     }
 
     private parse(): string {
-        this.serverConfiguration = fs.readFileSync(this.fileName, {
-            encoding: 'utf8',
-            flag: 'r',
-        });
+        try {
+            this.serverConfiguration = fs.readFileSync(this.fileName, {
+                encoding: 'utf8',
+                flag: 'r',
+            });
+        } catch (error) {}
 
         if (this.serverConfiguration != null) {
             const worldName = 'level-name=';

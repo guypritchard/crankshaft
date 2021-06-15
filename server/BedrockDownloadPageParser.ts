@@ -1,4 +1,4 @@
-import * as $ from 'cheerio';
+import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import * as url from 'url';
 import * as path from 'path';
@@ -17,7 +17,9 @@ export class BedrockDownloadPageParser {
 
         const html = await result.text();
 
-        const linkObjects: cheerio.Cheerio = $('a', html);
+        const $ = cheerio.load(html);
+
+        const linkObjects = $('a');
         const total = linkObjects.length;
 
         if (total === 0) {
