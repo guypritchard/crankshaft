@@ -2,7 +2,7 @@ import React from 'react';
 import { Server } from './Server';
 import '../styles.scss';
 import { Header } from './Header';
-import { BedrockVersion } from '../../../interfaces/types';
+import { BedrockVersion } from '../../interfaces/types';
 import useFetch from 'react-fetch-hook';
 
 export const App: React.FC = () => {

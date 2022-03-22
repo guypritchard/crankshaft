@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Status } from './Status';
-import { BedrockVersion, ServerState, ServerStatus, versionEqual } from '../../../interfaces/types';
+import { BedrockVersion, ServerState, ServerStatus, versionEqual } from '../../interfaces/types';
 import { Version } from './Version';
 import { Spinner } from './Spinner';
 

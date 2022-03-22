@@ -9,7 +9,5 @@
     "target": "es5",
     "jsx": "react"
   },
-  "include": [
-    "./src/**/*"
-, "interfaces/types.ts"  ]
+  "include": ["./**/*", "interfaces/types.ts"  ]
 }

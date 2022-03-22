@@ -1,10 +1,10 @@
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    entry: './src/frontend/index.tsx',
+    entry: './index.tsx',
     output: {
         filename: 'bundle.js',
-        path: __dirname + '/build/front',
+        path: __dirname + '/dist',
     },
 
     resolve: {
@@ -15,15 +15,15 @@ module.exports = {
     plugins: [
         new CopyPlugin({
             patterns: [
-                { from: 'src/frontend/index.html', to: 'index.html' },
-                { from: 'src/frontend/images/favicon.ico', to: 'favicon.ico' },
+                { from: 'index.html', to: 'index.html' },
+                { from: 'images/favicon.ico', to: 'favicon.ico' },
         ]}),
     ],
 
     module: {
         rules: [
-            // All files with a ".ts" or ".tsx" extension will be handled by "awesome-typescript-loader".
-            { test: /\.tsx?$/, use: { loader: 'awesome-typescript-loader' } },
+            // All files with a ".ts" or ".tsx" extension will be handled by "ts-loader".
+            { test: /\.tsx?$/, use: { loader: 'ts-loader' } },
 
             // // All output ".js" files will have any sourcemaps re-processed by "source-map-loader".
             // { enforce: 'pre', test: /\.js$/, use: { loader: 'source-map-loader' } },
