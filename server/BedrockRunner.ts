@@ -1,9 +1,9 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { BedrockVersion } from '../interfaces/types';
-import { JSONFile } from './utils/JSONFile';
-import { wait } from './utils/Wait';
+import { BedrockVersion } from '../interfaces/types.js';
+import { JSONFile } from './utils/JSONFile.js';
+import { wait } from './utils/Wait.js';
 
 export class BedrockRunner {
     static readonly bedrockExecutable = 'bedrock_server.exe';

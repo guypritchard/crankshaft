@@ -1,9 +1,9 @@
-import { BedrockDownloader } from './BedrockDownloader';
-import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
-import { BedrockInstaller } from './BedrockInstaller';
-import { BedrockRunner } from './BedrockRunner';
-import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } from '../interfaces/types';
-import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
+import { BedrockDownloader } from './BedrockDownloader.js';
+import { BedrockDownloadPageParser } from './BedrockDownloadPageParser.js';
+import { BedrockInstaller } from './BedrockInstaller.js';
+import { BedrockRunner } from './BedrockRunner.js';
+import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } from '../interfaces/types.js';
+import { BedrockWorldConfiguration } from './BedrockWorldConfiguration.js';
 
 export class BedrockState {
     config: WorldConfiguration | null = null;
@@ -30,6 +30,8 @@ export class BedrockState {
         console.log('Checking current Bedrock Server version.');
         const builds = await parser.getBedrockVersions();
 
+        console.log(builds);
+
         if (builds.length === 0) {
             throw new Error('No builds found');
         }
@@ -38,6 +40,7 @@ export class BedrockState {
         if (windowsBuild.length === 0) {
             throw new Error('No compatible builds found.');
         }
+
         this.config = new BedrockWorldConfiguration(this.configuration.basePath);
 
         await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);

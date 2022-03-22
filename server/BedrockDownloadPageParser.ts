@@ -1,39 +1,40 @@
-import * as cheerio from 'cheerio';
+import cheerio from 'cheerio';
 import fetch from 'node-fetch';
-import * as url from 'url';
-import * as path from 'path';
-import { BedrockVersion } from '../interfaces/types';
+import url from 'url';
+import path from 'path';
+import { BedrockVersion } from '../interfaces/types.js';
 
 export class BedrockDownloadPageParser {
-    static readonly Url = 'https://minecraft.net/en-us/download/server/bedrock/';
+    static readonly Url = 'https://www.minecraft.net/en-us/download/server/bedrock';
     static readonly PartialFileName = 'bedrock-server-';
 
     public async getBedrockVersions(): Promise<BedrockVersion[]> {
-        const result = await fetch(BedrockDownloadPageParser.Url);
+        console.log("Fetching download page.");  
 
+        const result = await fetch(BedrockDownloadPageParser.Url); 
         if (result.ok === false) {
+            console.log("Unable to download Bedrock download page.");
             return [];
         }
-
         const html = await result.text();
-
         const $ = cheerio.load(html);
-
         const linkObjects = $('a');
         const total = linkObjects.length;
 
         if (total === 0) {
+            console.log("No download links found on the download page.");
             return [];
         }
 
         const links: string[] = [];
-        linkObjects.each((i, element) => {
-            links.push((element as cheerio.TagElement).attribs.href as string);
+        linkObjects.each((i: number, element: any) => {
+            links.push((element).attribs.href as string);
         });
 
         const minecraftFullLink = links.filter((l) => l && l.indexOf(BedrockDownloadPageParser.PartialFileName) !== -1);
 
         if (minecraftFullLink.length == 0) {
+            console.log("Bedrock package not found.");
             return [];
         }
 
@@ -54,6 +55,11 @@ export class BedrockDownloadPageParser {
             } as BedrockVersion;
         });
 
-        return minecraftData ?? [];
+        if (minecraftData) {
+          return minecraftData;
+        }
+
+        console.log("No minecraft version data found.");
+        return [];
     }
 }

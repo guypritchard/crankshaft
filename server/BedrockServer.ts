@@ -1,43 +1,45 @@
-import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
-import { BedrockState } from './BedrockState';
+import { BedrockDownloadPageParser } from './BedrockDownloadPageParser.js';
+import { BedrockState } from './BedrockState.js';
 import express from 'express';
-import { ServerConfiguration } from '../interfaces/types';
+import { ServerConfiguration } from '../interfaces/types.js';
 
 export class CrankShaft {
-    constructor(app: express.Express, configuration: ServerConfiguration) {
-        const state = new BedrockState(configuration);
-        state
-            .start()
-            .then(() => 'done')
-            .catch((e) => console.error(e));
+    private readonly state: BedrockState;
 
+    constructor(app: express.Express, configuration: ServerConfiguration) {
+        this.state = new BedrockState(configuration);
+        
         app.get('/servers/:id', (request, response) => {
-            response.send(state.state());
+            response.send(this.state.state());
         });
 
         app.get('/servers/:id/stdout', (request, response) => {
-            response.send(state.state()?.stdout);
+            response.send(this.state.state()?.stdout);
         });
 
         app.post('/servers/:id/commands/update', (request, response) => {
-            state.update().then(() => response.send(state.state()));
+          this.state.update().then(() => response.send(this.state.state()));
         });
 
         app.post('/servers/:id/commands/stop', (request, response) => {
-            state.stop().then(() => response.send(state.state()));
+          this.state.stop().then(() => response.send(this.state.state()));
         });
 
         app.post('/servers/:id/commands/start', (request, response) => {
-            state.start().then(() => response.send(state.state()));
+          this.state.start().then(() => response.send(this.state.state()));
         });
 
         app.post('/servers/:id/commands/backup', (request, response) => {
-            state.backup().then(() => response.send(state.state()));
+          this.state.backup().then(() => response.send(this.state.state()));
         });
 
         app.get('/bedrock/versions', (request, response) => {
             const parser = new BedrockDownloadPageParser();
             parser.getBedrockVersions().then((v) => response.send(v));
         });
+    }
+
+    public async init(): Promise<void> {
+      await this.state.start();
     }
 }

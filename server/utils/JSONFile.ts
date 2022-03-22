@@ -8,7 +8,7 @@ export class JSONFile {
                 return JSON.parse(versionJSON) as T;
             }
         } catch (e) {
-            console.debug(e);
+            console.log(e);
         }
 
         throw new Error(`Couldn't find or load ${path}`);

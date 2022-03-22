@@ -1,8 +1,8 @@
-import * as unzipper from 'unzipper';
-import * as fs from 'fs';
-import * as path from 'path';
-import { JSONFile } from './utils/JSONFile';
-import { BedrockVersion } from '../interfaces/types';
+import unzipper from 'unzipper';
+import fs from 'fs';
+import path from 'path';
+import { JSONFile } from './utils/JSONFile.js';
+import { BedrockVersion } from '../interfaces/types.js';
 
 export class BedrockInstaller {
     public async install(version: BedrockVersion, versionCache: string, basePath: string): Promise<void> {
