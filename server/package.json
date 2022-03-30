@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "build": "tsc && copyfiles -f ../config/*.json ./dist",
     "start": "npm run build && cd ./dist/server && node index.js",
-    "publish": "copyfiles -f ./dist/** ../dist/server"
+    "publish": "copyfiles -f ./dist/** ../dist/server",
+    "bundle": "esbuild index.ts --bundle --platform=node --minify --outfile=./dist/server.bundle.js"
   },
   "author": "",
   "license": "ISC",
@@ -22,6 +22,7 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.10",
     "cors": "^2.8.5",
+    "esbuild": "^0.14.28",
     "express": "^4.17.1",
     "https-proxy-agent": "^5.0.0",
     "node-fetch": "^3.2.3",

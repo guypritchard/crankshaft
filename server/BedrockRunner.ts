@@ -56,7 +56,7 @@ export class BedrockRunner {
         this._stderr = [];
 
         const serverProcess = new Promise((resolve, reject) => {
-            console.log('Starting Bedrock Server...');
+            console.log(`Starting Bedrock Server at '${this.basePath}'`);
             this.bedrock = spawn(path.join(this.basePath, BedrockRunner.bedrockExecutable));
             console.log(`Started Bedrock Server PID:${this.pid}`);
 

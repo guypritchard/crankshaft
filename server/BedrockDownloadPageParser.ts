@@ -55,7 +55,9 @@ export class BedrockDownloadPageParser {
             } as BedrockVersion;
         });
 
-        if (minecraftData) {
+        
+        if (minecraftData && minecraftData.length) {
+          console.log(`Current version is ${minecraftData[0].version}`);
           return minecraftData;
         }
 

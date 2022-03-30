@@ -5,12 +5,27 @@ import { WorldConfiguration } from '../interfaces/types';
 export class BedrockWorldConfiguration implements WorldConfiguration {
     public world = '';
     public worlds: string[] = [];
+    public port: number = 19132;
     private serverConfiguration = '';
 
     public setCurrentWorld(name: string): void {
-        this.serverConfiguration.replace(this.world, name);
+        this.serverConfiguration = this.serverConfiguration.replaceAll(this.world, name);
         this.world = name;
         this.save();
+    }
+
+    /**
+     * Set the port the Bedrock server runs on.
+     * @param port 
+     * None of this port stuff works - the base Bedrock image has a long standing bug which means it still binds to the default
+     * port - preventing multiple servers to be run natively.
+     * https://bugs.mojang.com/browse/BDS-1094
+     */
+    public setPort(port: number): void {
+      console.log(`replacing ${this.port.toString()} with ${port.toString()}, ${this.serverConfiguration}`)
+      this.serverConfiguration = this.serverConfiguration.replaceAll(this.port.toString(), port.toString());
+      this.port = port;
+      this.save();
     }
 
     private get fileName(): string {
@@ -39,13 +54,18 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
         } catch (error) {}
 
         if (this.serverConfiguration != null) {
-            const worldName = 'level-name=';
-            const start = this.serverConfiguration.indexOf(worldName) + worldName.length;
-            const end = this.serverConfiguration.indexOf('\r\n', start);
-            this.world = this.serverConfiguration.slice(start, end);
+            this.world = this.getConfigValue('level-name');
+            this.port = parseInt(this.getConfigValue('server-port'));
         }
 
         return '';
+    }
+
+    private getConfigValue(config: string): string {
+      const configStart = config +'=';
+      const start = this.serverConfiguration.indexOf(configStart) + configStart.length;
+      const end = this.serverConfiguration.indexOf('\r\n', start);
+      return this.serverConfiguration.slice(start, end);
     }
 
     private save(): void {
