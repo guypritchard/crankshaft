@@ -11,7 +11,7 @@ export class BedrockDownloadPageParser {
     public async getBedrockVersions(): Promise<BedrockVersion[]> {
         console.log("Fetching download page.");  
 
-        const result = await fetch(BedrockDownloadPageParser.Url); 
+        const result = await fetch(BedrockDownloadPageParser.Url, { method: 'GET', headers: { 'User-Agent': "test/agent"} }); 
         if (result.ok === false) {
             console.log("Unable to download Bedrock download page.");
             return [];

@@ -1,9 +1,9 @@
-import { BedrockDownloader } from './BedrockDownloader.js';
-import { BedrockDownloadPageParser } from './BedrockDownloadPageParser.js';
-import { BedrockInstaller } from './BedrockInstaller.js';
-import { BedrockRunner } from './BedrockRunner.js';
-import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } from '../interfaces/types.js';
-import { BedrockWorldConfiguration } from './BedrockWorldConfiguration.js';
+import { BedrockDownloader } from './BedrockDownloader';
+import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
+import { BedrockInstaller } from './BedrockInstaller';
+import { BedrockRunner } from './BedrockRunner';
+import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } from '../interfaces/types';
+import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
 import path from 'path';
 
 export class BedrockState {
@@ -54,6 +54,17 @@ export class BedrockState {
     return true;
   }
 
+  public async changeWorld(worldName: string): Promise<boolean>
+  { 
+    if (this.config?.world == worldName){
+      return false;
+    }
+
+    await this.stop();
+    this.config?.setCurrentWorld(worldName);
+    await this.start();
+    return true;
+  } 
 
   public async update(): Promise<boolean> {
     const currentVersion = this.runner.version();

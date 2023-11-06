@@ -16,8 +16,8 @@ try {
 const app = express();
 app.use(express.json());
 app.use(cors());
-console.log(`Hosting frontend from: ${path.join(__dirname, '../../dist/frontend')}`);
-app.use(express.static(path.join(__dirname, '../../dist/frontend')));
+console.log(`Hosting frontend from: ${path.join(__dirname, '../../../frontend/dist')}`);
+app.use(express.static(path.join(__dirname, '../../../frontend/dist')));
 new CrankShaft(app, configuration)
   .init()
   .then(() => {

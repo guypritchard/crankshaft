@@ -1,5 +1,4 @@
-import { BedrockDownloadPageParser } from './BedrockDownloadPageParser.js';
-import { BedrockState } from './BedrockState.js';
+import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
 import express from 'express';
 import { ServerConfiguration } from '../interfaces/types.js';
 import { BedrockServers } from './BedrockServers.js';
@@ -125,6 +124,22 @@ export class CrankShaft {
       }
 
       state.backup().then(() => response.send(state.state()));
+    });
+
+    app.put('/servers/:id/world/:name', (request, response) => {
+      const id = parseInt(request.params.id);
+      if (isNaN(id)) {
+        response.status(400).send();
+        return;
+      }
+
+      const state = this.serversState.get(id);
+      if (state == null) {
+        response.status(404).send();
+        return;
+      }
+
+      state.changeWorld(request.params.name).then(() => response.send(state.state()));
     });
 
     app.get('/bedrock/versions', (request, response) => {

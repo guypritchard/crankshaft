@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Status } from './Status';
 import { BedrockVersion, ServerState, ServerStatus, versionEqual } from '../../interfaces/types';
 import { Version } from './Version';
@@ -17,6 +17,9 @@ export const Server: React.FC<ServerProps> = (props) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [isStarting, setIsStarting] = useState<boolean>(false);
+    const [currentWorld, setCurrentWorld] = useState<string>();
+
+    const logsRef = useRef(null);
 
     const refreshStdOut = async (): Promise<void> => {
         const response = await fetch(`/servers/${props.index}/stdout`);
@@ -30,6 +33,22 @@ export const Server: React.FC<ServerProps> = (props) => {
             }
         }
     };
+
+    const setWorld = async (worldName: string): Promise<void> => {
+        try {
+            console.log("Changing world to: " + worldName);
+            setIsProcessing(true);
+            const response = await fetch(`/servers/${props.index}/world/${worldName}`, { method: 'PUT' });
+            if (response.ok) {
+                const state = await response.json();
+                
+                setServerState(state);
+                setCurrentWorld(state.bedrockConfig.world);
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    }
 
     useEffect(() => {
         const interval = setInterval(async () => {
@@ -47,7 +66,9 @@ export const Server: React.FC<ServerProps> = (props) => {
                 setServerState(responseState);
                 if (responseState?.state !== state) {
                     setState(responseState.state);
+                    setCurrentWorld(responseState.bedrockConfig.world)
                 }
+                logsRef?.current?.scrollIntoView({ behavior: 'smooth'});
             } else {
                 console.error(`${response.status}:${response.statusText}`);
             }
@@ -58,7 +79,7 @@ export const Server: React.FC<ServerProps> = (props) => {
         fetchData();
     }, [state]);
 
-    const command = async (command: string) => {
+    const command = async (command: string): Promise<void> => {
         try {
             setIsStarting(command === 'start');
             setIsProcessing(true);
@@ -81,7 +102,8 @@ export const Server: React.FC<ServerProps> = (props) => {
 
             <label htmlFor="world_select">World:</label>
             <div className="nes-select is-dark">
-                <select value={serverState?.bedrockConfig.world} id="world_select">
+                <select id="world_select" value={currentWorld} 
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setWorld(event.target.value)}>
                     {serverState?.bedrockConfig.worlds.map((w) => (
                         <option className="nes-pointer" key={w}>
                             {w}
@@ -90,13 +112,13 @@ export const Server: React.FC<ServerProps> = (props) => {
                 </select>
             </div>
             <div>
-                <div className="nes-container is-rounded is-dark crankshaft-status">
-                    {serverState?.stdout.length > 10 && <div>...</div>}
-                    {serverState?.stdout.slice(Math.max(serverState.stdout.length - 10, 0)).map((l) => (
-                        <div key={l}>{l}</div>
-                    ))}
-                    {(isProcessing || isStarting) && <Spinner></Spinner>}
-                </div>
+                <textarea 
+                    ref={logsRef}
+                    className="nes-textarea is-dark crankshaft-status" 
+                    readOnly={true} 
+                    defaultValue={serverState.stdout}/>
+                
+                {(isProcessing || isStarting) && <Spinner></Spinner>}
 
                 {serverState.state == ServerStatus.Running ? (
                     <>

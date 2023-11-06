@@ -9,7 +9,8 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
     private serverConfiguration = '';
 
     public setCurrentWorld(name: string): void {
-        this.serverConfiguration = this.serverConfiguration.replaceAll(this.world, name);
+
+        this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.world, 'g'), name);
         this.world = name;
         this.save();
     }
@@ -23,7 +24,8 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
      */
     public setPort(port: number): void {
       console.log(`replacing ${this.port.toString()} with ${port.toString()}, ${this.serverConfiguration}`)
-      this.serverConfiguration = this.serverConfiguration.replaceAll(this.port.toString(), port.toString());
+
+      this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.port.toString(), 'g'), port.toString());
       this.port = port;
       this.save();
     }
