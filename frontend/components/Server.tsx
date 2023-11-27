@@ -116,7 +116,7 @@ export const Server: React.FC<ServerProps> = (props) => {
                     ref={logsRef}
                     className="nes-textarea is-dark crankshaft-status" 
                     readOnly={true} 
-                    defaultValue={serverState.stdout}/>
+                    defaultValue={serverState.stdout.join("\n")}/>
                 
                 {(isProcessing || isStarting) && <Spinner></Spinner>}
 

@@ -19,7 +19,7 @@
     "publish": "npm run publish:server && npm run publish:client",
     "publish:prod": "npm run build:prod && cd build && npm pack && npm publish",
     "start": "run-p start:server build:client",
-    "start:server": "npm start --prefix ./server",
+    "start:server": "npm run build:server & npm start --prefix ./server",
     "lint": "eslint ./src/** --ext .js,.ts,.tsx --quiet --fix"
   },
   "author": "",

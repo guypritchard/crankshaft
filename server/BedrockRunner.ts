@@ -60,36 +60,31 @@ export class BedrockRunner {
             this.bedrock = spawn(path.join(this.basePath, BedrockRunner.bedrockExecutable));
             console.log(`Started Bedrock Server PID:${this.pid}`);
 
-            let partialLine: string | undefined = '';
+            let partialLine: string = '';
             this.bedrock.stdout.on('data', (data: string) => {
                 const totalLogLine = data.toString();
                 let endsWithPartial = false;
-                const hadAPartial = partialLine != '';
 
                 // This code is trash - needs looking at...
                 if (!totalLogLine.endsWith('\r\n')) {
                     endsWithPartial = true;
                 }
 
-                const logLines = data
-                    .toString()
+                const logLines = totalLogLine
                     .split('\r\n')
                     .filter((l) => l.length > 0);
 
-                if (logLines.length) {
-                    if (hadAPartial) {
-                        this._stdout.push(partialLine + logLines[0]);
+                if (logLines.length > 0) {
+                    if (partialLine !== '') {
+                        logLines[0] = partialLine + logLines[0];
                         partialLine = '';
                     }
 
                     if (endsWithPartial) {
-                        partialLine = logLines.pop();
+                        partialLine += logLines.pop();
                     }
 
                     logLines.forEach((l, i) => {
-                        if (hadAPartial && i === 0) {
-                            return;
-                        }
                         this._stdout.push(l);
                     });
                 }
