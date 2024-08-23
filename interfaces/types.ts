@@ -4,6 +4,9 @@ export enum ServerStatus {
   Stopped = 2,
 }
 
+export enum BedrockMode { unknown = 'unknown', survival = 'survival', creative = 'creative', adventure = 'adventure' };
+
+
 export interface ServerState {
   pid: number;
   state: number;
@@ -30,8 +33,10 @@ export interface WorldConfiguration {
   port: number;
   world: string;
   worlds: string[];
+  mode: string;
   setCurrentWorld(world: string): void;
   setPort(port: number): void;
+  setMode(mode: BedrockMode): void;
 }
 
 export interface ServerConfiguration {

@@ -3,6 +3,7 @@ import { Status } from './Status';
 import { BedrockVersion, ServerState, ServerStatus, versionEqual } from '../../interfaces/types';
 import { Version } from './Version';
 import { Spinner } from './Spinner';
+import { Mode } from './Mode';
 
 export interface ServerProps {
     installers: BedrockVersion[];
@@ -18,20 +19,30 @@ export const Server: React.FC<ServerProps> = (props) => {
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [isStarting, setIsStarting] = useState<boolean>(false);
     const [currentWorld, setCurrentWorld] = useState<string>();
+    const [isConnected, setIsConnected] = useState<boolean>();
 
     const logsRef = useRef(null);
 
     const refreshStdOut = async (): Promise<void> => {
-        const response = await fetch(`/servers/${props.index}/stdout`);
-        if (response.ok) {
-            const stdout = await response.json();
+        try {
+            const response = await fetch(`/servers/${props.index}/stdout`, {signal: AbortSignal.timeout(5000)});
+            if (response.ok) {
+                setIsConnected(true)
 
-            setServerState({ ...serverState, stdout });
+                const stdout = await response.json();
 
-            if (isStarting) {
-                setIsStarting(false);
+                setServerState({ ...serverState, stdout });
+
+                if (isStarting) {
+                    setIsStarting(false);
+                }
+            } else {
+                setIsConnected(false)
             }
+        } catch {
+            setIsConnected(false)
         }
+
     };
 
     const setWorld = async (worldName: string): Promise<void> => {
@@ -97,7 +108,7 @@ export const Server: React.FC<ServerProps> = (props) => {
     ) : (
         <section className="nes-container is-rounded is-dark">
             <h1>
-                Hosted Server <Status status={serverState.state}></Status> <Version version={serverState.version} />
+                Hosted Server <Status status={serverState.state}></Status> <Version version={serverState.version} /> <Mode mode={serverState.bedrockConfig?.mode} />
             </h1>
 
             <label htmlFor="world_select">World:</label>
@@ -118,7 +129,7 @@ export const Server: React.FC<ServerProps> = (props) => {
                     readOnly={true} 
                     defaultValue={serverState.stdout.join("\n")}/>
                 
-                {(isProcessing || isStarting) && <Spinner></Spinner>}
+                {(isProcessing || isStarting || !isConnected) && <Spinner></Spinner>}
 
                 {serverState.state == ServerStatus.Running ? (
                     <>

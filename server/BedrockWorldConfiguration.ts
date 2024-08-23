@@ -1,10 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { WorldConfiguration } from '../interfaces/types';
+import { BedrockMode, WorldConfiguration } from '../interfaces/types';
 
 export class BedrockWorldConfiguration implements WorldConfiguration {
     public world = '';
     public worlds: string[] = [];
+    public mode: string = '';
     public port: number = 19132;
     private serverConfiguration = '';
 
@@ -23,11 +24,19 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
      * https://bugs.mojang.com/browse/BDS-1094
      */
     public setPort(port: number): void {
-      console.log(`replacing ${this.port.toString()} with ${port.toString()}, ${this.serverConfiguration}`)
+      console.log(`Replacing ${this.port.toString()} with ${port.toString()}, ${this.serverConfiguration}`);
 
       this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.port.toString(), 'g'), port.toString());
       this.port = port;
       this.save();
+    }
+
+    public setMode(mode: BedrockMode): void {
+        console.log(`Setting game mode to: ${mode}`);
+        
+        this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.mode.toString(), 'g'), mode.toString());
+        this.mode = mode.toString()
+        this.save();
     }
 
     private get fileName(): string {
@@ -58,6 +67,7 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
         if (this.serverConfiguration != null) {
             this.world = this.getConfigValue('level-name');
             this.port = parseInt(this.getConfigValue('server-port'));
+            this.mode = this.getConfigValue('gamemode');
         }
 
         return '';
