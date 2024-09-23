@@ -25,7 +25,7 @@ export const Server: React.FC<ServerProps> = (props) => {
 
     const refreshStdOut = async (): Promise<void> => {
         try {
-            const response = await fetch(`/servers/${props.index}/stdout`, {signal: AbortSignal.timeout(5000)});
+            const response = await fetch(`/servers/${props.index}/stdout`/*, {signal: AbortSignal.timeout(5000)}*/);
             if (response.ok) {
                 setIsConnected(true)
 
@@ -127,7 +127,7 @@ export const Server: React.FC<ServerProps> = (props) => {
                     ref={logsRef}
                     className="nes-textarea is-dark crankshaft-status" 
                     readOnly={true} 
-                    defaultValue={serverState.stdout.join("\n")}/>
+                    value={serverState.stdout.join("\n")}/>
                 
                 {(isProcessing || isStarting || !isConnected) && <Spinner></Spinner>}
 

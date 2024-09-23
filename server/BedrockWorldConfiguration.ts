@@ -1,12 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { BedrockMode, WorldConfiguration } from '../interfaces/types';
+import { BEDROCK_DEFAULT_PORT } from './Constants';
 
 export class BedrockWorldConfiguration implements WorldConfiguration {
     public world = '';
     public worlds: string[] = [];
     public mode: string = '';
-    public port: number = 19132;
+    public port: number = BEDROCK_DEFAULT_PORT;
     private serverConfiguration = '';
 
     public setCurrentWorld(name: string): void {
@@ -24,14 +25,14 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
      * https://bugs.mojang.com/browse/BDS-1094
      */
     public setPort(port: number): void {
-      console.log(`Replacing ${this.port.toString()} with ${port.toString()}, ${this.serverConfiguration}`);
+      console.log(`Replacing ${this.port.toString()} with ${port.toString()}`);
 
       this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.port.toString(), 'g'), port.toString());
       this.port = port;
       this.save();
     }
 
-    public setMode(mode: BedrockMode): void {
+    public setMode(mode: BedrockMode | string): void {
         console.log(`Setting game mode to: ${mode}`);
         
         this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.mode.toString(), 'g'), mode.toString());

@@ -5,6 +5,7 @@ import { BedrockRunner } from './BedrockRunner';
 import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } from '../interfaces/types';
 import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
 import path from 'path';
+import { BEDROCK_DEFAULT_PORT } from './Constants';
 
 export class BedrockState {
   config: WorldConfiguration | null = null;
@@ -12,7 +13,7 @@ export class BedrockState {
   process: Promise<void> = Promise.resolve();
   serverState: ServerStatus = ServerStatus.Unknown;
   path: string;
-  constructor(private id: number = 0, private port: number = 19132, private configuration: ServerConfiguration) {
+  constructor(private id: number = 0, private port: number = BEDROCK_DEFAULT_PORT, private configuration: ServerConfiguration) {
     this.path = path.join(this.configuration?.basePath, this.id.toString(), 'bedrock');
     this.runner = new BedrockRunner(this.path);
   }
@@ -95,6 +96,11 @@ export class BedrockState {
       console.log('Installing...');
       await this.stop();
       await installer.install(windowsBuild[0], this.configuration?.versionCache, this.path);
+
+      // Set configuration back to what it was before the upgrade.
+      this.config?.setCurrentWorld(this.config?.world);
+      this.config?.setMode(this.config?.mode);
+
       await this.start();
       return true;
     }

@@ -2,6 +2,7 @@ import path from "path";
 import { ServerConfiguration } from "../interfaces/types";
 import { BedrockState } from "./BedrockState";
 import { JSONFile } from "./utils/JSONFile";
+import { BEDROCK_DEFAULT_PORT } from "./Constants";
 
 /**
  * This is an extremely naive implementation at this stage...  Persisting state to a file.
@@ -38,7 +39,7 @@ export class BedrockServers {
     return [...this.state.entries()];
   }
 
-  public async addNew(id: number, port: number = 19132): Promise<BedrockState> {
+  public async addNew(id: number, port: number = BEDROCK_DEFAULT_PORT): Promise<BedrockState> {
     if (this.state.get(id) == null) {
       const bedrockState = new BedrockState(id, port, this.config);
       await bedrockState.start();

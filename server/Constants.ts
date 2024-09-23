@@ -1,0 +1,1 @@
+export const BEDROCK_DEFAULT_PORT = 19132;

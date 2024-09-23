@@ -36,7 +36,7 @@ export interface WorldConfiguration {
   mode: string;
   setCurrentWorld(world: string): void;
   setPort(port: number): void;
-  setMode(mode: BedrockMode): void;
+  setMode(mode: BedrockMode | string): void;
 }
 
 export interface ServerConfiguration {
