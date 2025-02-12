@@ -8,10 +8,10 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
     public worlds: string[] = [];
     public mode: string = '';
     public port: number = BEDROCK_DEFAULT_PORT;
+    public telemetry: boolean = true;
     private serverConfiguration = '';
 
     public setCurrentWorld(name: string): void {
-
         this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.world, 'g'), name);
         this.world = name;
         this.save();
@@ -37,6 +37,17 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
         
         this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.mode.toString(), 'g'), mode.toString());
         this.mode = mode.toString()
+        this.save();
+    }
+
+    public enableDetailedTelemetry() : void {
+        console.log(`Enabling server telemetry`);
+
+        if (this.serverConfiguration.indexOf("emit-server-telemetry") === -1)
+        {
+            this.serverConfiguration += "\r\nemit-server-telemetry=true\r\n";
+        }
+
         this.save();
     }
 
@@ -78,6 +89,7 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
       const configStart = config +'=';
       const start = this.serverConfiguration.indexOf(configStart) + configStart.length;
       const end = this.serverConfiguration.indexOf('\r\n', start);
+
       return this.serverConfiguration.slice(start, end);
     }
 

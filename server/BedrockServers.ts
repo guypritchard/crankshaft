@@ -31,6 +31,7 @@ export class BedrockServers {
       
     } else {
       await this.addNew(0);
+      await this.addNew(1);
       this.persist();
     }
   }
@@ -41,7 +42,7 @@ export class BedrockServers {
 
   public async addNew(id: number, port: number = BEDROCK_DEFAULT_PORT): Promise<BedrockState> {
     if (this.state.get(id) == null) {
-      const bedrockState = new BedrockState(id, port, this.config);
+      const bedrockState = new BedrockState(id, port + (id*2), this.config);
       await bedrockState.start();
       this.state.set(id, bedrockState);
       return bedrockState;

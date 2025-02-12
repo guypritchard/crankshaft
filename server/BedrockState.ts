@@ -48,11 +48,15 @@ export class BedrockState {
     this.config = new BedrockWorldConfiguration(this.path);
     this.config.setPort(this.port);
 
-    await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
-    console.log('Installing...');
-    await this.stop();
-    await installer.install(windowsBuild[0], this.configuration?.versionCache, this.path);
-    return true;
+    try {
+      await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
+      console.log('Installing...');
+      await this.stop();
+      await installer.install(windowsBuild[0], this.configuration?.versionCache, this.path);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   public async changeWorld(worldName: string): Promise<boolean>
@@ -85,13 +89,13 @@ export class BedrockState {
       throw new Error('No compatible builds found.');
     }
 
-    console.log('Installed version: ' + currentVersion?.version);
-    console.log('Latest windows version:' + windowsBuild[0].version);
+    console.log('Installed version: ' + currentVersion?.build);
+    console.log('Latest windows version:' + windowsBuild[0].build);
 
     this.config = new BedrockWorldConfiguration(this.path);
     this.config.setPort(this.port);
 
-    if (windowsBuild[0].version !== currentVersion?.version) {
+    if (windowsBuild[0].build !== currentVersion?.build) {
       await downloader.download(this.configuration?.versionCache || '', windowsBuild[0]);
       console.log('Installing...');
       await this.stop();
@@ -100,6 +104,7 @@ export class BedrockState {
       // Set configuration back to what it was before the upgrade.
       this.config?.setCurrentWorld(this.config?.world);
       this.config?.setMode(this.config?.mode);
+      this.config?.enableDetailedTelemetry();
 
       await this.start();
       return true;

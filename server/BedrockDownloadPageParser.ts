@@ -39,15 +39,11 @@ export class BedrockDownloadPageParser {
         }
 
         const minecraftData = minecraftFullLink.map((l) => {
-            let minecraftVersion = l.slice(BedrockDownloadPageParser.PartialFileName.length);
-            minecraftVersion = minecraftVersion.slice(0, minecraftVersion.lastIndexOf('.'));
-
             const filename = path.basename(url.parse(l).pathname as string);
             const baseVersionRegEx = /(\d+\.)(\d+\.)(\d+\.)(\d+)/;
             const match = filename.match(baseVersionRegEx);
 
             return {
-                version: minecraftVersion,
                 build: match?.length ? match[0] : 'unknown',
                 url: l,
                 platform: l.indexOf('win') === -1 ? 'linux' : 'windows',
@@ -57,7 +53,7 @@ export class BedrockDownloadPageParser {
 
         
         if (minecraftData && minecraftData.length) {
-          console.log(`Current version is ${minecraftData[0].version}`);
+          console.log(`Found ${ minecraftData.length } published versions.`);
           return minecraftData;
         }
 

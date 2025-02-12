@@ -4,6 +4,7 @@ import { BedrockVersion, ServerState, ServerStatus, versionEqual } from '../../i
 import { Version } from './Version';
 import { Spinner } from './Spinner';
 import { Mode } from './Mode';
+import { Port } from './Port';
 
 export interface ServerProps {
     installers: BedrockVersion[];
@@ -108,7 +109,10 @@ export const Server: React.FC<ServerProps> = (props) => {
     ) : (
         <section className="nes-container is-rounded is-dark">
             <h1>
-                Hosted Server <Status status={serverState.state}></Status> <Version version={serverState.version} /> <Mode mode={serverState.bedrockConfig?.mode} />
+                Hosted Server <Status status={serverState.state}></Status>
+                <Version version={serverState.version} />
+                <Mode mode={serverState.bedrockConfig?.mode} />
+                <Port port={serverState.bedrockConfig.port} />
             </h1>
 
             <label htmlFor="world_select">World:</label>

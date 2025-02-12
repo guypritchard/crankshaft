@@ -37,6 +37,7 @@ export interface WorldConfiguration {
   setCurrentWorld(world: string): void;
   setPort(port: number): void;
   setMode(mode: BedrockMode | string): void;
+  enableDetailedTelemetry(): void;
 }
 
 export interface ServerConfiguration {

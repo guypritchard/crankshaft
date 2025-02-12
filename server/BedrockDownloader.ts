@@ -1,39 +1,47 @@
 import * as fs from 'fs';
 import fetch from 'node-fetch';
+import https from 'https';
 import * as path from 'path';
 import { BedrockVersion } from '../interfaces/types.js';
 
 export class BedrockDownloader {
+
+
+  private downloadFile(url: string, dest: string){
+    var file = fs.createWriteStream(dest);
+    return new Promise<void>((resolve, reject) => {
+      var responseSent = false; // flag to make sure that response is sent only once.
+      https.get(url, response => {
+        response.pipe(file);
+        file.on('finish', () =>{
+          file.close(() => {
+            if(responseSent)  return;
+            responseSent = true;
+            resolve();
+          });
+        });
+      }).on('error', err => {
+          if(responseSent)  return;
+          responseSent = true;
+          reject(err);
+      });
+    });
+  }
+
     public async download(versionCache: string, version: BedrockVersion): Promise<void> {
         if (fs.existsSync(versionCache) === false) {
             fs.mkdirSync(versionCache, { recursive: true });
         }
 
-        if (fs.existsSync(path.join(versionCache, version.filename))) {
+        const localFile = path.join(versionCache, version.filename);
+
+        if (fs.existsSync(localFile)) {
             console.log('Found current version - skipping download.');
             return;
         }
 
         console.log('Downloading...');
-        const download = await fetch(version.url);
 
-        if (download.ok){
-          const downloading = new Promise((resolve, reject) => {
-            const dest = fs.createWriteStream(path.join(versionCache, version.filename), {
-              flags: 'w',
-            });
-
-            if (download.body != null) {
-              download.body.pipe(dest);
-              dest.on('error', reject).on('finish', resolve);
-            } else {
-              throw new Error(`No data returned from: ${version.url}`);
-            }
-          });
-
-          await downloading;
-        } else {
-          throw new Error(`Unable to download bedrock package: ${version.url}`);
-        }
+        await this.downloadFile(version.url, localFile);
     }
 }
