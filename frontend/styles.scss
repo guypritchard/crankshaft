@@ -15,22 +15,22 @@ body {
 }
 
 .container {
-    max-width: 980px;
-    margin: 0 auto;
-    margin-top: 80px;
-  }
+  max-width: 980px;
+  margin: 0 auto;
+  margin-top: 80px;
+}
 
-  header {
-    display: flex;
-    align-items: baseline;
-    max-width: 980px;
-    margin: 0 auto;
-    padding-top: 1rem;
-    transition: all 0.2s ease;
-  }
-  
+header {
+  display: flex;
+  align-items: baseline;
+  max-width: 980px;
+  margin: 0 auto;
+  padding-top: 1rem;
+  transition: all 0.2s ease;
+}
 
-  
+
+
 /* Header */
 header {
   position: fixed;
@@ -42,7 +42,7 @@ header {
   color: white;
 }
 
-header > .container {
+header>.container {
   display: flex;
   align-items: baseline;
   max-width: 980px;
@@ -51,14 +51,15 @@ header > .container {
   transition: all 0.2s ease;
 }
 
-header > .container > .nav-brand {
+header>.container>.nav-brand {
   margin-right: auto;
 }
 
 .nav-brand .brand-logo {
   margin-right: 1rem;
 }
-.nav-brand > a {
+
+.nav-brand>a {
   color: white;
   text-decoration: none;
 }
@@ -68,20 +69,22 @@ header > .container > .nav-brand {
 }
 
 /* Header-sticky */
-header.sticky > .container {
+header.sticky>.container {
   font-size: 0.8rem;
   padding: 0;
   align-items: center;
 }
+
 header.sticky .nav-brand h1 {
   margin: 0;
 }
+
 header.sticky .nav-brand p {
   display: none;
   margin-bottom: 0;
   font-size: 0.6rem;
 }
-  
+
 
 .minecraft-logo {
   position: relative;
@@ -90,20 +93,68 @@ header.sticky .nav-brand p {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  display:inline-block;
+  display: inline-block;
   margin-right: 1rem;
 
   width: 2.5rem;
   height: 2.5rem;
- }
+}
 
- .crankshaft-status {
-   min-height: 21rem;
-   margin-top: 1em !important;
-   margin-bottom: 1em !important;
-   font-size: 12px;
- }
+.crankshaft-status {
+  min-height: 21rem;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+  font-size: 12px;
+}
 
- .crankshaft-badge {
-   font-size: 0.75rem;
- }
+.crankshaft-badge {
+  font-size: 0.75rem;
+  margin: 1em;
+}
+
+.react-tabs {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.react-tabs__tab-list {
+  list-style-type: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+li.nes-container.is-dark {
+  list-style: none;
+  color: #444;
+}
+
+li.nes-container.react-tabs__tab--selected {
+  color: white;
+}
+
+.react-tabs__tab--disabled {
+  color: #444;
+  cursor: default;
+}
+
+.react-tabs__tab:focus {
+  outline: none;
+}
+
+.react-tabs__tab:focus:after {
+  content: '';
+  position: absolute;
+  height: 5px;
+  left: -4px;
+  right: -4px;
+  bottom: -5px;
+  background: #fff;
+}
+
+.react-tabs__tab-panel {
+  display: none;
+}
+
+.react-tabs__tab-panel--selected {
+  display: block;
+}

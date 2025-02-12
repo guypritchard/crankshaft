@@ -11,7 +11,7 @@ export const Version: React.FC<VersionProps> = (props) => {
     }
 
     return (
-        <div className="nes-badge -right crankshaft-badge">
+        <div className="nes-badge crankshaft-badge">
             <span className="is-primary">{props.version.build}</span>
         </div>
     );

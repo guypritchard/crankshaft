@@ -109,7 +109,7 @@ export const Server: React.FC<ServerProps> = (props) => {
     ) : (
         <section className="nes-container is-rounded is-dark">
             <h1>
-                Hosted Server <Status status={serverState.state}></Status>
+                Hosted Server<Status status={serverState.state}></Status>
                 <Version version={serverState.version} />
                 <Mode mode={serverState.bedrockConfig?.mode} />
                 <Port port={serverState.bedrockConfig.port} />

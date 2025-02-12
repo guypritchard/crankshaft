@@ -11,7 +11,7 @@ export const Status: React.FC<StatusProps> = (props) => {
     }
 
     return (
-        <div className="nes-badge -right crankshaft-badge">
+        <div className="nes-badge crankshaft-badge">
             <span className={props.status === ServerStatus.Running ? 'is-success' : 'is-error'}>
                 {props.status === ServerStatus.Running ? 'Running' : 'Stopped'}
             </span>

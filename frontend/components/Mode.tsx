@@ -11,7 +11,7 @@ export const Mode: React.FC<ServerModeProps> = (props) => {
     }
 
     return (
-        <div className="nes-badge -right crankshaft-badge">
+        <div className="nes-badge crankshaft-badge">
             <span className={props.mode === BedrockMode.survival ? 'is-success' : 'is-error'}>
                 {props.mode.toString()}
             </span>
