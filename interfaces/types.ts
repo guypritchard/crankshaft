@@ -14,6 +14,7 @@ export interface ServerState {
   version: BedrockVersion | null;
   bedrockConfig: WorldConfiguration | null;
   crankShaftConfig: ServerConfiguration;
+  exitCode?: number | null;
 }
 
 export interface BedrockVersion {
@@ -24,9 +25,16 @@ export interface BedrockVersion {
   filename: string;
 }
 
-export const versionEqual = (allVersions: BedrockVersion[], version: BedrockVersion): boolean => {
-  const platformVersion = allVersions.filter((v) => v.platform === version.platform)[0];
-  return platformVersion.build === version.build;
+export const versionEqual = (
+  allVersions: BedrockVersion[] = [],
+  version?: BedrockVersion | null,
+): boolean => {
+  if (version == null) {
+    return false;
+  }
+
+  const platformVersion = allVersions.find((v) => v.platform === version.platform);
+  return platformVersion != null && platformVersion.build === version.build;
 };
 
 export interface WorldConfiguration {
@@ -38,6 +46,7 @@ export interface WorldConfiguration {
   setPort(port: number): void;
   setMode(mode: BedrockMode | string): void;
   enableDetailedTelemetry(): void;
+  refreshWorlds(): void;
 }
 
 export interface ServerConfiguration {

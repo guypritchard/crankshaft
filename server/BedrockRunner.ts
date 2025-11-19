@@ -10,6 +10,7 @@ export class BedrockRunner {
     protected bedrock: ChildProcessWithoutNullStreams | undefined;
     private _stdout: string[] = [];
     private _stderr: string[] = [];
+    private exitCode: number | null = null;
 
     constructor(private basePath: string) {
         if (!fs.existsSync(basePath)) {
@@ -29,6 +30,10 @@ export class BedrockRunner {
         return this.bedrock?.pid ?? 0;
     }
 
+    public get lastExitCode(): number | null {
+        return this.exitCode;
+    }
+
     public stop(): void {
         if (this.bedrock != null) {
             this.bedrock.stdin.write('stop\r\n');
@@ -44,8 +49,13 @@ export class BedrockRunner {
     }
 
     public version(): BedrockVersion | null {
+        const versionFile = path.join(this.basePath, 'version.json');
+        if (JSONFile.exists(versionFile) === false) {
+            return null;
+        }
+
         try {
-            return JSONFile.read<BedrockVersion>(path.join(this.basePath, 'version.json'));
+            return JSONFile.read<BedrockVersion>(versionFile);
         } catch (error) {
             return null;
         }
@@ -94,9 +104,10 @@ export class BedrockRunner {
                 this._stderr.push(data.toString());
             });
 
-            this.bedrock.on('exit', (code: number) => {
+            this.bedrock.on('exit', (code: number | null) => {
+                this.exitCode = code ?? null;
+                console.log('child process exited with code ' + (code ?? 'null').toString());
                 resolve(code);
-                console.log('child process exited with code ' + code.toString());
             });
 
             this.bedrock.on('error', (err: Error) => {
@@ -105,5 +116,6 @@ export class BedrockRunner {
         });
 
         await serverProcess;
+        this.bedrock = undefined;
     }
 }

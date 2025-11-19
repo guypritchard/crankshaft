@@ -6,6 +6,8 @@ import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } fr
 import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
 import path from 'path';
 import { BEDROCK_DEFAULT_PORT } from './Constants';
+import * as fs from 'fs';
+import unzipper, { File as UnzipperFile } from 'unzipper';
 
 export class BedrockState {
   config: WorldConfiguration | null = null;
@@ -16,6 +18,10 @@ export class BedrockState {
   constructor(private id: number = 0, private port: number = BEDROCK_DEFAULT_PORT, private configuration: ServerConfiguration) {
     this.path = path.join(this.configuration?.basePath, this.id.toString(), 'bedrock');
     this.runner = new BedrockRunner(this.path);
+  }
+
+  public getPort(): number {
+    return this.port;
   }
 
   public async backup(): Promise<void> {
@@ -122,8 +128,15 @@ export class BedrockState {
     
     this.config = new BedrockWorldConfiguration(this.path);
     this.config.setPort(this.port);
-    this.process = this.runner.start();
     this.serverState = ServerStatus.Running;
+    this.process = this.runner.start().then(() => {
+      if (this.serverState === ServerStatus.Running) {
+        this.serverState = ServerStatus.Stopped;
+      }
+    }).catch((error) => {
+      console.error(`Bedrock server ${this.id} encountered an error:`, error);
+      this.serverState = ServerStatus.Stopped;
+    });
   }
 
   public async stop(): Promise<void> {
@@ -132,7 +145,98 @@ export class BedrockState {
     this.serverState = ServerStatus.Stopped;
   }
 
+  public async importWorld(archiveBuffer: Buffer, originalFileName: string): Promise<ServerState> {
+    if (this.serverState !== ServerStatus.Stopped) {
+      throw new Error('Stop the server before importing a world.');
+    }
+
+    if (!Buffer.isBuffer(archiveBuffer) || archiveBuffer.length === 0) {
+      throw new Error('Uploaded file is empty.');
+    }
+
+    const extension = path.extname(originalFileName ?? '').toLowerCase();
+    if (extension !== '.mcworld') {
+      throw new Error('Only .mcworld files are supported.');
+    }
+
+    const archive = await unzipper.Open.buffer(archiveBuffer);
+    if (archive.files.length === 0) {
+      throw new Error('Unable to read the uploaded archive.');
+    }
+
+    let containsLevelDat = false;
+    let inferredWorldName: string | null = null;
+    const rootFolder = this.detectRootFolder(archive.files);
+    const extractedEntries: Array<{ path: string; type: 'Directory' | 'File'; data?: Buffer }> = [];
+
+    for (const entry of archive.files) {
+      const normalizedPath = this.normalizeEntryPath(entry.path, rootFolder);
+      if (entry.path.toLowerCase().endsWith('level.dat')) {
+        containsLevelDat = true;
+      }
+
+      if (entry.type === 'Directory') {
+        if (normalizedPath != null) {
+          extractedEntries.push({ path: normalizedPath, type: 'Directory' });
+        }
+        continue;
+      }
+
+      const content = await entry.buffer();
+
+      if (
+        inferredWorldName == null &&
+        entry.path.toLowerCase().endsWith('levelname.txt')
+      ) {
+        const candidate = content.toString('utf8').trim();
+        if (candidate.length > 0) {
+          inferredWorldName = candidate;
+        }
+      }
+
+      if (normalizedPath != null) {
+        extractedEntries.push({ path: normalizedPath, type: 'File', data: content });
+      }
+    }
+
+    if (!containsLevelDat) {
+      throw new Error('The uploaded file is not a valid .mcworld archive.');
+    }
+
+    const fallbackName = path.basename(originalFileName, extension) || `world-${Date.now()}`;
+    const worldName = this.sanitizeWorldName(inferredWorldName ?? fallbackName);
+
+    const worldsDirectory = path.join(this.path, 'worlds');
+    const destination = path.join(worldsDirectory, worldName);
+    await fs.promises.mkdir(worldsDirectory, { recursive: true });
+    await fs.promises.rm(destination, { recursive: true, force: true });
+    await fs.promises.mkdir(destination, { recursive: true });
+
+    for (const entry of extractedEntries) {
+      const targetPath = path.join(destination, entry.path);
+      if (entry.type === 'Directory') {
+        await fs.promises.mkdir(targetPath, { recursive: true });
+      } else if (entry.data != null) {
+        await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+        await fs.promises.writeFile(targetPath, entry.data);
+      }
+    }
+
+    if (this.config == null) {
+      this.config = new BedrockWorldConfiguration(this.path);
+      this.config.setPort(this.port);
+    }
+
+    this.config.refreshWorlds();
+    this.config.setCurrentWorld(worldName);
+    this.config.refreshWorlds();
+
+    return this.state();
+  }
+
   public state(): ServerState {
+    this.config?.refreshWorlds();
+
     return {
       state: this.serverState,
       pid: this.runner.pid,
@@ -140,6 +244,51 @@ export class BedrockState {
       version: this.runner.version(),
       crankShaftConfig: this.configuration,
       bedrockConfig: this.config,
+      exitCode: this.runner.lastExitCode,
     };
+  }
+
+  private detectRootFolder(entries: UnzipperFile[]): string | null {
+    const roots = entries
+      .map((entry) => entry.path.replace(/\\/g, '/').split('/').filter((segment) => segment.length > 0)[0])
+      .filter((segment): segment is string => segment != null && segment.length > 0);
+
+    if (roots.length === 0) {
+      return null;
+    }
+
+    const candidate = roots[0];
+    return roots.every((root) => root === candidate) ? candidate : null;
+  }
+
+  private normalizeEntryPath(entryPath: string, rootFolder: string | null): string | null {
+    const cleanedPath = entryPath.replace(/\\/g, '/');
+    const segments = cleanedPath
+      .split('/')
+      .filter((segment) => segment.length > 0 && segment !== '.' && segment !== '..');
+
+    if (segments.length === 0) {
+      return null;
+    }
+
+    if (rootFolder != null && segments[0] === rootFolder) {
+      segments.shift();
+    }
+
+    if (segments.length === 0) {
+      return null;
+    }
+
+    return segments.join(path.sep);
+  }
+
+  private sanitizeWorldName(name: string): string {
+    const trimmed = name.trim();
+    const sanitized = trimmed.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').replace(/\s+/g, ' ').trim();
+    if (sanitized.length === 0) {
+      return `world-${Date.now()}`;
+    }
+
+    return sanitized.slice(0, 64);
   }
 }

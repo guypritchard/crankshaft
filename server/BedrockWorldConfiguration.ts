@@ -27,7 +27,8 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
     public setPort(port: number): void {
       console.log(`Replacing ${this.port.toString()} with ${port.toString()}`);
 
-      this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.port.toString(), 'g'), port.toString());
+      this.setConfigValue('server-port', port.toString());
+      this.setConfigValue('server-portv6', (port + 1).toString());
       this.port = port;
       this.save();
     }
@@ -57,12 +58,16 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
 
     constructor(private basePath: string) {
         this.parse();
-        this.worlds = this.loadWorlds(basePath);
+        this.worlds = this.loadWorlds();
     }
 
-    private loadWorlds(basePath: string): string[] {
+    public refreshWorlds(): void {
+        this.worlds = this.loadWorlds();
+    }
+
+    private loadWorlds(): string[] {
         try {
-            return fs.readdirSync(path.join(basePath, 'worlds'));
+            return fs.readdirSync(path.join(this.basePath, 'worlds'));
         } catch (error) {
             return [];
         }
@@ -100,5 +105,25 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
                 flag: 'w',
             });
         }
+    }
+
+    private setConfigValue(key: string, value: string): void {
+        const configStart = `${key}=`;
+        const escaped = this.escapeRegExp(configStart);
+        const regex = new RegExp(`^${escaped}.*$`, 'm');
+
+        if (regex.test(this.serverConfiguration)) {
+            this.serverConfiguration = this.serverConfiguration.replace(regex, `${configStart}${value}`);
+        } else {
+            if (this.serverConfiguration.length > 0 && this.serverConfiguration.endsWith('\r\n') === false) {
+                this.serverConfiguration += '\r\n';
+            }
+
+            this.serverConfiguration += `${configStart}${value}\r\n`;
+        }
+    }
+
+    private escapeRegExp(value: string): string {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 }

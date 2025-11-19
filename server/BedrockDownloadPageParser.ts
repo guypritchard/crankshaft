@@ -1,63 +1,81 @@
-import cheerio from 'cheerio';
 import fetch from 'node-fetch';
-import url from 'url';
 import path from 'path';
-import { BedrockVersion } from '../interfaces/types.js';
+import { BedrockVersion, Platform } from '../interfaces/types.js';
+
+interface DownloadLink {
+    downloadType: string;
+    downloadUrl: string;
+}
+
+interface DownloadLinksResponse {
+    result?: {
+        links?: DownloadLink[];
+    };
+}
 
 export class BedrockDownloadPageParser {
-    static readonly Url = 'https://www.minecraft.net/en-us/download/server/bedrock';
-    static readonly PartialFileName = 'bedrock-server-';
+    private static readonly DownloadLinksUrl = 'https://net-secondary.web.minecraft-services.net/api/v1.0/download/links';
+    private static readonly SupportedDownloads: Record<string, Platform> = {
+        serverBedrockWindows: 'windows',
+        serverBedrockLinux: 'linux',
+    };
 
     public async getBedrockVersions(): Promise<BedrockVersion[]> {
-        console.log("Fetching download page.");  
+        console.log('Fetching download links JSON.');
 
-        const result = await fetch(BedrockDownloadPageParser.Url, { method: 'GET', headers: { 'User-Agent': "test/agent"} }); 
-        if (result.ok === false) {
-            console.log("Unable to download Bedrock download page.");
+        try {
+            const result = await fetch(BedrockDownloadPageParser.DownloadLinksUrl, {
+                method: 'GET',
+                headers: { 'User-Agent': 'crankshaft/bedrock-downloader' },
+            });
+
+            if (result.ok === false) {
+                console.log('Unable to download Bedrock download links.');
+                return [];
+            }
+
+            const json = (await result.json()) as DownloadLinksResponse;
+            const links = json?.result?.links ?? [];
+
+            const versions = links
+                .filter((link) => BedrockDownloadPageParser.SupportedDownloads[link.downloadType] != null)
+                .map((link) => this.mapLinkToVersion(link))
+                .filter((version): version is BedrockVersion => version != null);
+
+            if (versions.length === 0) {
+                console.log('No minecraft version data found.');
+                return [];
+            }
+
+            console.log(`Found ${versions.length} published versions.`);
+            return versions;
+        } catch (error) {
+            console.log('Failed to fetch Bedrock download links.');
+            console.log(error);
             return [];
         }
-        const html = await result.text();
-        const $ = cheerio.load(html);
-        const linkObjects = $('a');
-        const total = linkObjects.length;
+    }
 
-        if (total === 0) {
-            console.log("No download links found on the download page.");
-            return [];
+    private mapLinkToVersion(link: DownloadLink): BedrockVersion | null {
+        const platform = BedrockDownloadPageParser.SupportedDownloads[link.downloadType];
+        if (platform == null) {
+            return null;
         }
 
-        const links: string[] = [];
-        linkObjects.each((i: number, element: any) => {
-            links.push((element).attribs.href as string);
-        });
+        const filename = path.basename(new URL(link.downloadUrl).pathname);
+        const build = this.extractBuildFromFilename(filename) ?? 'unknown';
 
-        const minecraftFullLink = links.filter((l) => l && l.indexOf(BedrockDownloadPageParser.PartialFileName) !== -1);
+        return {
+            build: build,
+            version: build,
+            url: link.downloadUrl,
+            platform,
+            filename,
+        };
+    }
 
-        if (minecraftFullLink.length == 0) {
-            console.log("Bedrock package not found.");
-            return [];
-        }
-
-        const minecraftData = minecraftFullLink.map((l) => {
-            const filename = path.basename(url.parse(l).pathname as string);
-            const baseVersionRegEx = /(\d+\.)(\d+\.)(\d+\.)(\d+)/;
-            const match = filename.match(baseVersionRegEx);
-
-            return {
-                build: match?.length ? match[0] : 'unknown',
-                url: l,
-                platform: l.indexOf('win') === -1 ? 'linux' : 'windows',
-                filename: filename,
-            } as BedrockVersion;
-        });
-
-        
-        if (minecraftData && minecraftData.length) {
-          console.log(`Found ${ minecraftData.length } published versions.`);
-          return minecraftData;
-        }
-
-        console.log("No minecraft version data found.");
-        return [];
+    private extractBuildFromFilename(filename: string): string | null {
+        const buildMatch = filename.match(/bedrock-server-([\d.]+)\.zip/i);
+        return buildMatch?.[1] ?? null;
     }
 }

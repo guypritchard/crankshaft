@@ -1,108 +1,221 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Status } from './Status';
 import { BedrockVersion, ServerState, ServerStatus, versionEqual } from '../../interfaces/types';
 import { Version } from './Version';
 import { Spinner } from './Spinner';
 import { Mode } from './Mode';
 import { Port } from './Port';
+import { WorldUpload } from './WorldUpload';
 
 export interface ServerProps {
     installers: BedrockVersion[];
-    index: number;
+    serverId: number;
+    onDelete: (serverId: number) => Promise<void>;
+    onStateChange?: (state: ServerState) => void;
 }
 
 const STDOUT_REFRESH_MS = 2000;
 
 export const Server: React.FC<ServerProps> = (props) => {
-    const [state, setState] = useState<number>(0);
     const [serverState, setServerState] = useState<ServerState>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [isStarting, setIsStarting] = useState<boolean>(false);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
     const [currentWorld, setCurrentWorld] = useState<string>();
     const [isConnected, setIsConnected] = useState<boolean>();
 
-    const logsRef = useRef(null);
+    const logsRef = useRef<HTMLTextAreaElement | null>(null);
 
-    const refreshStdOut = async (): Promise<void> => {
+    const hydrateServerState = useCallback(
+        async (withLoading: boolean = false): Promise<void> => {
+            if (withLoading) {
+                setIsLoading(true);
+            }
+
+            try {
+                const response = await fetch(`/servers/${props.serverId}`);
+                if (response.ok) {
+                    const responseState: ServerState = await response.json();
+                    setServerState((previousState) => {
+                        if (previousState == null) {
+                            return responseState;
+                        }
+
+                        return {
+                            ...previousState,
+                            ...responseState,
+                            bedrockConfig: responseState?.bedrockConfig ?? previousState.bedrockConfig,
+                        };
+                    });
+
+                    if (responseState?.bedrockConfig?.world) {
+                        setCurrentWorld(responseState.bedrockConfig.world);
+                    }
+                    logsRef?.current?.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    console.error(`${response.status}:${response.statusText}`);
+                }
+            } finally {
+                if (withLoading) {
+                    setIsLoading(false);
+                }
+            }
+        },
+        [props.serverId],
+    );
+
+    const refreshStdOut = useCallback(async (): Promise<void> => {
         try {
-            const response = await fetch(`/servers/${props.index}/stdout`/*, {signal: AbortSignal.timeout(5000)}*/);
+            const response = await fetch(`/servers/${props.serverId}/stdout`/*, {signal: AbortSignal.timeout(5000)}*/);
             if (response.ok) {
-                setIsConnected(true)
+                setIsConnected(true);
 
                 const stdout = await response.json();
 
-                setServerState({ ...serverState, stdout });
+                let updatedState: ServerState | undefined;
+                setServerState((previousState) => {
+                    if (previousState == null) {
+                        return previousState;
+                    }
+
+                    updatedState = { ...previousState, stdout };
+                    return updatedState;
+                });
+
+                const needsHydration =
+                    updatedState == null ||
+                    updatedState.bedrockConfig == null ||
+                    !updatedState.bedrockConfig.world ||
+                    (updatedState.bedrockConfig.worlds?.length ?? 0) === 0;
+
+                if (needsHydration) {
+                    await hydrateServerState();
+                } else if (currentWorld == null && updatedState?.bedrockConfig?.world) {
+                    setCurrentWorld(updatedState.bedrockConfig.world);
+                }
 
                 if (isStarting) {
                     setIsStarting(false);
                 }
             } else {
-                setIsConnected(false)
+                setIsConnected(false);
             }
         } catch {
-            setIsConnected(false)
+            setIsConnected(false);
         }
-
-    };
+    }, [props.serverId, hydrateServerState, currentWorld, isStarting]);
 
     const setWorld = async (worldName: string): Promise<void> => {
         try {
             console.log("Changing world to: " + worldName);
             setIsProcessing(true);
-            const response = await fetch(`/servers/${props.index}/world/${worldName}`, { method: 'PUT' });
+            const response = await fetch(`/servers/${props.serverId}/world/${worldName}`, { method: 'PUT' });
             if (response.ok) {
                 const state = await response.json();
-                
+
                 setServerState(state);
                 setCurrentWorld(state.bedrockConfig.world);
+                setUploadError(null);
             }
         } finally {
             setIsProcessing(false);
         }
     }
 
+    const uploadWorld = useCallback(
+        async (file: File): Promise<void> => {
+            if (!file.name.toLowerCase().endsWith('.mcworld')) {
+                setUploadError('Only .mcworld files are supported.');
+                return;
+            }
+
+            if (serverState?.state !== ServerStatus.Stopped) {
+                setUploadError('Stop the server before importing a world.');
+                return;
+            }
+
+            setUploadError(null);
+            setIsUploading(true);
+
+            try {
+                const response = await fetch(`/servers/${props.serverId}/worlds/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'X-World-Filename': file.name,
+                    },
+                    body: file,
+                });
+
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `Unable to import world (${response.status})`);
+                }
+
+                const updatedState: ServerState = await response.json();
+                setServerState(updatedState);
+                if (updatedState?.bedrockConfig?.world) {
+                    setCurrentWorld(updatedState.bedrockConfig.world);
+                }
+                setUploadError(null);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Unable to import world.';
+                setUploadError(message);
+            } finally {
+                setIsUploading(false);
+            }
+        },
+        [props.serverId, serverState],
+    );
+
     useEffect(() => {
         const interval = setInterval(async () => {
             refreshStdOut();
         }, STDOUT_REFRESH_MS);
         return () => clearInterval(interval);
-    }, [isLoading, isProcessing]);
+    }, [refreshStdOut]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            const response = await fetch(`/servers/${props.index}`);
-            if (response.ok) {
-                const responseState = await response.json();
-                setServerState(responseState);
-                if (responseState?.state !== state) {
-                    setState(responseState.state);
-                    setCurrentWorld(responseState.bedrockConfig.world)
-                }
-                logsRef?.current?.scrollIntoView({ behavior: 'smooth'});
-            } else {
-                console.error(`${response.status}:${response.statusText}`);
-            }
-
-            setIsLoading(false);
-        };
-
-        fetchData();
-    }, [state]);
+        hydrateServerState(true);
+    }, [hydrateServerState]);
 
     const command = async (command: string): Promise<void> => {
         try {
             setIsStarting(command === 'start');
             setIsProcessing(true);
-            const response = await fetch(`/servers/${props.index}/commands/${command}`, { method: 'POST' });
+            const response = await fetch(`/servers/${props.serverId}/commands/${command}`, { method: 'POST' });
             if (response.ok) {
-                setServerState(await response.json());
+                const updated = await response.json();
+                setServerState(updated);
+                props.onStateChange?.(updated);
             }
         } finally {
             setIsProcessing(false);
         }
     };
+
+    const deleteServer = async (): Promise<void> => {
+        if (serverState?.state !== ServerStatus.Stopped) {
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            await props.onDelete(props.serverId);
+        } catch (error) {
+            console.error(`Unable to delete server ${props.serverId}`, error);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const showUpdateButton =
+        serverState?.version != null && versionEqual(props.installers, serverState.version) === false;
+    const worldOptions = serverState?.bedrockConfig?.worlds ?? [];
+    const canUploadWorld = serverState?.state === ServerStatus.Stopped;
 
     return isLoading ? (
         <div>Loading...</div>
@@ -117,23 +230,38 @@ export const Server: React.FC<ServerProps> = (props) => {
 
             <label htmlFor="world_select">World:</label>
             <div className="nes-select is-dark">
-                <select id="world_select" value={currentWorld} 
-                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setWorld(event.target.value)}>
-                    {serverState?.bedrockConfig.worlds.map((w) => (
-                        <option className="nes-pointer" key={w}>
-                            {w}
-                        </option>
-                    ))}
+                <select
+                    id="world_select"
+                    value={currentWorld ?? ''}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setWorld(event.target.value)}
+                    disabled={worldOptions.length === 0}
+                >
+                    {worldOptions.length === 0 ? (
+                        <option value="">No worlds available</option>
+                    ) : (
+                        worldOptions.map((w) => (
+                            <option className="nes-pointer" key={w}>
+                                {w}
+                            </option>
+                        ))
+                    )}
                 </select>
             </div>
             <div>
-                <textarea 
+                <textarea
                     ref={logsRef}
-                    className="nes-textarea is-dark crankshaft-status" 
-                    readOnly={true} 
-                    value={serverState.stdout.join("\n")}/>
-                
-                {(isProcessing || isStarting || !isConnected) && <Spinner></Spinner>}
+                    className="nes-textarea is-dark crankshaft-status"
+                    readOnly={true}
+                    value={serverState.stdout.join("\n")} />
+
+                 <WorldUpload
+                    canUpload={canUploadWorld}
+                    isUploading={isUploading}
+                    serverState={serverState?.state}
+                    onUpload={(file) => void uploadWorld(file)}
+                    error={uploadError}                 />
+
+                {(isProcessing || isStarting || isDeleting || isUploading || !isConnected) && <Spinner></Spinner>}
 
                 {serverState.state == ServerStatus.Running ? (
                     <>
@@ -150,11 +278,21 @@ export const Server: React.FC<ServerProps> = (props) => {
                     </button>
                 )}
 
-                {versionEqual(props.installers, serverState.version) === false && (
+                {showUpdateButton && (
                     <button type="button" className="nes-btn is-primary" onClick={() => command('update')}>
                         Update
                     </button>
                 )}
+
+                {serverState.state === ServerStatus.Stopped && (
+                    <button
+                        type="button"
+                        className="nes-btn is-error"
+                        onClick={deleteServer}
+                        disabled={serverState.state !== ServerStatus.Stopped}
+                    >
+                        Delete
+                    </button>)}
             </div>
         </section>
     );
