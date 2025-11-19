@@ -1,0 +1,18 @@
+mode: ContinuousDeployment
+tag-prefix: 'v'
+continuous-delivery-fallback-tag: 'ci'
+commit-message-incrementing: Enabled
+branches:
+  main:
+    regex: ^main$
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: true
+    label: ''
+  feature:
+    regex: ^(feature|feat|bugfix|hotfix|experiment)/.*$
+    increment: Patch
+    is-source-branch-for:
+      - main
+ignore:
+  sha: []

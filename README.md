@@ -1,4 +1,4 @@
-# Crankshaft
+# <img src="README-assets-minecraft.png" alt="Crankshaft Minecraft Logo" width="48" /> Crankshaft
 
 Crankshaft is a Node/React application for provisioning and managing multiple Minecraft Bedrock servers on a single host. It provides a browser-based UI that lets you create servers, monitor output, switch worlds, upload `.mcworld` archives, and control lifecycle commands without touching the console.
 
@@ -65,6 +65,18 @@ ESLint and Prettier guard the TypeScript/React code. Run `npm run lint` locally 
 ## Continuous Integration
 
 GitHub Actions (`.github/workflows/ci.yml`) installs dependencies, lints the TypeScript sources, and runs the root build on every push and pull request to `main`. Update the workflow to match your Node version or add additional jobs (tests, packaging) as needed.
+
+### Release Automation
+
+Pushes to `main` also trigger `.github/workflows/release.yml`, which:
+
+- Calculates a semantic version via [GitVersion](GitVersion.yml) using continuous deployment semantics suited for trunk-based workflows
+- Updates all workspace `package.json` files with the computed version
+- Builds the frontend/server bundles and assembles an npm-ready tarball
+- Publishes a GitHub Release with the generated artifact attached
+- Optionally runs `npm publish` when an `NPM_TOKEN` secret is provided
+
+This keeps experimental builds flowing automatically from every merged commit.
 
 ## Uploading Worlds
 

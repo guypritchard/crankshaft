@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Setup GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+
+      - name: Update package versions
+        env:
+          VERSION: ${{ steps.gitversion.outputs.semVer }}
+        run: |
+          echo "Setting workspace version to ${VERSION}"
+          npm version "${VERSION}" --no-git-tag-version
+          npm version "${VERSION}" --no-git-tag-version --prefix frontend
+          npm version "${VERSION}" --no-git-tag-version --prefix server
+
+      - name: Build production bundles
+        run: npm run build:prod
+
+      - name: Prepare npm package contents
+        run: |
+          PACKAGE_DIR=package
+          rm -rf "$PACKAGE_DIR"
+          mkdir -p "$PACKAGE_DIR"
+          cp package.json "$PACKAGE_DIR/"
+          cp package-lock.json "$PACKAGE_DIR/"
+          cp README.md "$PACKAGE_DIR/"
+          cp LICENSE "$PACKAGE_DIR/"
+          cp README-assets-minecraft.png "$PACKAGE_DIR/"
+          cp -R config "$PACKAGE_DIR/config"
+          cp -R interfaces "$PACKAGE_DIR/interfaces"
+          cp Configuration.json "$PACKAGE_DIR/Configuration.json"
+          mkdir -p "$PACKAGE_DIR/server"
+          cp -R server/dist/server "$PACKAGE_DIR/server"
+          cp -R server/dist/interfaces "$PACKAGE_DIR/server/interfaces"
+          cp server/Configuration.json "$PACKAGE_DIR/server/Configuration.json"
+          mkdir -p "$PACKAGE_DIR/frontend"
+          cp -R frontend/dist "$PACKAGE_DIR/frontend/dist"
+
+      - name: Pack npm artifact
+        id: pack
+        run: |
+          cd package
+          npm pack
+          TARBALL=$(ls *.tgz)
+          echo "tarball=${TARBALL}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crankshaft-${{ steps.gitversion.outputs.semVer }}
+          path: package/${{ steps.pack.outputs.tarball }}
+
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.gitversion.outputs.semVer }}
+          release_name: v${{ steps.gitversion.outputs.semVer }}
+          body: |
+            Automated release generated from commit ${{ github.sha }}.
+          draft: false
+          prerelease: false
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: package/${{ steps.pack.outputs.tarball }}
+          asset_name: ${{ steps.pack.outputs.tarball }}
+          asset_content_type: application/gzip
+
+      - name: Publish to npm
+        if: secrets.NPM_TOKEN != ''
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd package
+          npm publish
