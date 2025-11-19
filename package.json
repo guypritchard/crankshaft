@@ -13,7 +13,7 @@
     "build:client:prod": "cd frontend && npm run build:prod && cd ..",
     "build": "npm run build:client && npm run build:server",
     "build:prod": "npm run build:client:prod && npm run build:server",
-    "prebuild:prod": "copy package.json build",
+    "prebuild:prod": "shx rm -rf build && shx mkdir -p build && shx cp package.json build/",
     "publish:server": "cd server && npm run publish && cd ..",
     "publish:client": "cd frontend && npm run publish && cd ..",
     "publish": "npm run publish:server && npm run publish:client",
@@ -37,6 +37,7 @@
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.5.0",
     "prettier": "^3.6.2",
+    "shx": "^0.4.0",
     "tsc": "^2.0.4",
     "typescript-eslint": "^8.47.0",
     "webpack": "^5.89.0"
