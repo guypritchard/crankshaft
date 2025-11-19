@@ -112,11 +112,3 @@ jobs:
           asset_path: package/${{ steps.pack.outputs.tarball }}
           asset_name: ${{ steps.pack.outputs.tarball }}
           asset_content_type: application/gzip
-
-      - name: Publish to npm
-        if: ${{ secrets.NPM_TOKEN != '' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd package
-          npm publish
