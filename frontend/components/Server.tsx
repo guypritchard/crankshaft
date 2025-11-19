@@ -255,12 +255,12 @@ export const Server: React.FC<ServerProps> = (props) => {
                     value={serverState.stdout.join('\n')}
                 />
 
-            <WorldUpload
-                canUpload={canUploadWorld}
-                isUploading={isUploading}
-                onUpload={(file) => void uploadWorld(file)}
-                error={uploadError}
-            />
+                <WorldUpload
+                    canUpload={canUploadWorld}
+                    isUploading={isUploading}
+                    onUpload={(file) => void uploadWorld(file)}
+                    error={uploadError}
+                />
 
                 {(isProcessing || isStarting || isDeleting || isUploading || !isConnected) && <Spinner></Spinner>}
 
