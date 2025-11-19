@@ -18,8 +18,9 @@
     "publish:client": "cd frontend && npm run publish && cd ..",
     "publish": "npm run publish:server && npm run publish:client",
     "publish:prod": "npm run build:prod && cd build && npm pack && npm publish",
-    "start": "run-p start:server build:client",
+    "start": "run-p start:server start:client",
     "start:server": "npm run build:server & npm start --prefix ./server",
+    "start:client": "cd frontend && npm run start && cd ..",
     "lint": "eslint \"frontend/**/*.{ts,tsx,js}\" \"server/**/*.{ts,tsx,js}\" --quiet"
   },
   "author": "",

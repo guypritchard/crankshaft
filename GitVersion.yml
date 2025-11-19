@@ -1,18 +1,28 @@
-mode: ContinuousDeployment
+# Trunk-based, master as trunk, no "ci" in version
+workflow: TrunkBased/preview1
+
+# Global defaults (mostly same as built-in TrunkBased)
+mode: ContinuousDelivery
 tag-prefix: 'v'
-continuous-delivery-fallback-tag: 'ci'
-commit-message-incrementing: Enabled
+
 branches:
   main:
+    # Treat 'main' as the trunk branch
     regex: ^main$
-    increment: Patch
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: true
+    # Important: CD instead of CDP so you don't get "-ci.X"
+    mode: ContinuousDelivery
+    # No pre-release label on main
     label: ''
-  feature:
-    regex: ^(feature|feat|bugfix|hotfix|experiment)/.*$
     increment: Patch
-    is-source-branch-for:
-      - main
-ignore:
-  sha: []
+    prevent-increment:
+      of-merged-branch: true
+
+  feature:
+    # Feature / bugfix style branches off master
+    regex: ^(feature|feat|bugfix|hotfix|fix)/(?<BranchName>.+)
+    mode: ContinuousDelivery
+    # Pre-release label taken from branch name, e.g. "feature/foo" → "-foo.1"
+    label: '{BranchName}'
+    increment: Minor
+    prevent-increment:
+      when-current-commit-tagged: false

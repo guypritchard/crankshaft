@@ -8,6 +8,7 @@
         "crankshaft": "./server/index.js"
     },
     "scripts": {
+        "start": "webpack --config webpack.config.dev.cjs --watch",
         "build": "webpack --config webpack.config.dev.cjs",
         "build:prod": "webpack --config webpack.config.prod.cjs",
         "publish": "copyfiles -f ./dist/** ../dist/frontend"
