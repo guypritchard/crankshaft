@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class JSONFile {
     public static exists(path: string): boolean {
-      return fs.existsSync(path);
+        return fs.existsSync(path);
     }
 
     public static read<T>(path: string): T {

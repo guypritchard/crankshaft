@@ -69,7 +69,7 @@ export const Server: React.FC<ServerProps> = (props) => {
 
     const refreshStdOut = useCallback(async (): Promise<void> => {
         try {
-            const response = await fetch(`/servers/${props.serverId}/stdout`/*, {signal: AbortSignal.timeout(5000)}*/);
+            const response = await fetch(`/servers/${props.serverId}/stdout` /*, {signal: AbortSignal.timeout(5000)}*/);
             if (response.ok) {
                 setIsConnected(true);
 
@@ -110,7 +110,7 @@ export const Server: React.FC<ServerProps> = (props) => {
 
     const setWorld = async (worldName: string): Promise<void> => {
         try {
-            console.log("Changing world to: " + worldName);
+            console.log('Changing world to: ' + worldName);
             setIsProcessing(true);
             const response = await fetch(`/servers/${props.serverId}/world/${worldName}`, { method: 'PUT' });
             if (response.ok) {
@@ -123,7 +123,7 @@ export const Server: React.FC<ServerProps> = (props) => {
         } finally {
             setIsProcessing(false);
         }
-    }
+    };
 
     const uploadWorld = useCallback(
         async (file: File): Promise<void> => {
@@ -252,14 +252,15 @@ export const Server: React.FC<ServerProps> = (props) => {
                     ref={logsRef}
                     className="nes-textarea is-dark crankshaft-status"
                     readOnly={true}
-                    value={serverState.stdout.join("\n")} />
+                    value={serverState.stdout.join('\n')}
+                />
 
-                 <WorldUpload
-                    canUpload={canUploadWorld}
-                    isUploading={isUploading}
-                    serverState={serverState?.state}
-                    onUpload={(file) => void uploadWorld(file)}
-                    error={uploadError}                 />
+            <WorldUpload
+                canUpload={canUploadWorld}
+                isUploading={isUploading}
+                onUpload={(file) => void uploadWorld(file)}
+                error={uploadError}
+            />
 
                 {(isProcessing || isStarting || isDeleting || isUploading || !isConnected) && <Spinner></Spinner>}
 
@@ -292,7 +293,8 @@ export const Server: React.FC<ServerProps> = (props) => {
                         disabled={serverState.state !== ServerStatus.Stopped}
                     >
                         Delete
-                    </button>)}
+                    </button>
+                )}
             </div>
         </section>
     );

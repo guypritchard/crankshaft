@@ -11,8 +11,8 @@
     "build:server": "cd server && npm run build && cd ..",
     "build:client": "cd frontend && npm run build && cd ..",
     "build:client:prod": "cd frontend && npm run build:prod && cd ..",
-    "build": "npm run build:client & npm run build:server",
-    "build:prod": "npm run build:client:prod & npm run build:server",
+    "build": "npm run build:client && npm run build:server",
+    "build:prod": "npm run build:client:prod && npm run build:server",
     "prebuild:prod": "copy package.json build",
     "publish:server": "cd server && npm run publish && cd ..",
     "publish:client": "cd frontend && npm run publish && cd ..",
@@ -20,7 +20,7 @@
     "publish:prod": "npm run build:prod && cd build && npm pack && npm publish",
     "start": "run-p start:server build:client",
     "start:server": "npm run build:server & npm start --prefix ./server",
-    "lint": "eslint ./src/** --ext .js,.ts,.tsx --quiet --fix"
+    "lint": "eslint \"frontend/**/*.{ts,tsx,js}\" \"server/**/*.{ts,tsx,js}\" --quiet"
   },
   "author": "",
   "license": "ISC",
@@ -28,7 +28,16 @@
     "npm-run-all": "^4.1.5"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
     "tsc": "^2.0.4",
+    "typescript-eslint": "^8.47.0",
     "webpack": "^5.89.0"
   }
 }

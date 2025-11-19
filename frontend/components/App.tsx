@@ -103,7 +103,6 @@ export const App: React.FC = () => {
         <>
             <div className="container">
                 <Header />
-               
 
                 {(version.isLoading || servers.isLoading) && (
                     <div className="nes-container is-rounded is-dark">
@@ -118,62 +117,57 @@ export const App: React.FC = () => {
                     </div>
                 )}
 
-             
-
                 {!servers.isLoading && !servers.error && (
                     <>
-                    <div className="crankshaft-tabs">
-                        {serverList.map((server) => {
-                            const isActive = activeServer?.id === server.id;
-                            const isRunning = server.state?.state === ServerStatus.Running;
-                            const tabStyle = isActive ? 'is-primary' : isRunning ? 'is-dark' : 'is-error';
+                        <div className="crankshaft-tabs">
+                            {serverList.map((server) => {
+                                const isActive = activeServer?.id === server.id;
+                                const isRunning = server.state?.state === ServerStatus.Running;
+                                const tabStyle = isActive ? 'is-primary' : isRunning ? 'is-dark' : 'is-error';
 
-                            return (
-                                <button
-                                    key={server.id}
-                                    className={`nes-btn ${tabStyle} crankshaft-tab`}
-                                    onClick={() => {
-                                        setIsCreateVisible(false);
-                                        setActiveServerId(server.id);
-                                    }}
-                                    type="button"
-                                >
-                                    Server {server.id}
-                                </button>
-                            );
-                        })}
-                        <button
-                            className="nes-btn is-success crankshaft-tab"
-                            onClick={() => setIsCreateVisible(true)}
-                            type="button"
-                            title="Create new server"
-                        >
-                            +
-                        </button>
-                    </div>
-                    
-                    {!shouldShowCreate && hasServers && activeServer != null && (
-                    <Server
-                        key={activeServer.id}
-                        installers={version.data ?? []}
-                        serverId={activeServer.id}
-                        onDelete={deleteServer}
-                        onStateChange={triggerServerRefresh}
-                    />
-                    )}
+                                return (
+                                    <button
+                                        key={server.id}
+                                        className={`nes-btn ${tabStyle} crankshaft-tab`}
+                                        onClick={() => {
+                                            setIsCreateVisible(false);
+                                            setActiveServerId(server.id);
+                                        }}
+                                        type="button"
+                                    >
+                                        Server {server.id}
+                                    </button>
+                                );
+                            })}
+                            <button
+                                className="nes-btn is-success crankshaft-tab"
+                                onClick={() => setIsCreateVisible(true)}
+                                type="button"
+                                title="Create new server"
+                            >
+                                +
+                            </button>
+                        </div>
 
-                    {shouldShowCreate && (
-                        <CreateServer
-                            onCreate={createServer}
-                            isBusy={isCreating}
-                            suggestedServerId={suggestedServerId}
-                        />
-                    )}
+                        {!shouldShowCreate && hasServers && activeServer != null && (
+                            <Server
+                                key={activeServer.id}
+                                installers={version.data ?? []}
+                                serverId={activeServer.id}
+                                onDelete={deleteServer}
+                                onStateChange={triggerServerRefresh}
+                            />
+                        )}
 
+                        {shouldShowCreate && (
+                            <CreateServer
+                                onCreate={createServer}
+                                isBusy={isCreating}
+                                suggestedServerId={suggestedServerId}
+                            />
+                        )}
                     </>
                 )}
-
-               
 
                 {!servers.isLoading && !servers.error && !hasServers && (
                     <div className="nes-container is-rounded is-dark">

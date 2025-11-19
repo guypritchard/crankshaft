@@ -14,7 +14,8 @@ interface DownloadLinksResponse {
 }
 
 export class BedrockDownloadPageParser {
-    private static readonly DownloadLinksUrl = 'https://net-secondary.web.minecraft-services.net/api/v1.0/download/links';
+    private static readonly DownloadLinksUrl =
+        'https://net-secondary.web.minecraft-services.net/api/v1.0/download/links';
     private static readonly SupportedDownloads: Record<string, Platform> = {
         serverBedrockWindows: 'windows',
         serverBedrockLinux: 'linux',

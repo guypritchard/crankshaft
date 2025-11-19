@@ -19,34 +19,36 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
 
     /**
      * Set the port the Bedrock server runs on.
-     * @param port 
+     * @param port
      * None of this port stuff works - the base Bedrock image has a long standing bug which means it still binds to the default
      * port - preventing multiple servers to be run natively.
      * https://bugs.mojang.com/browse/BDS-1094
      */
     public setPort(port: number): void {
-      console.log(`Replacing ${this.port.toString()} with ${port.toString()}`);
+        console.log(`Replacing ${this.port.toString()} with ${port.toString()}`);
 
-      this.setConfigValue('server-port', port.toString());
-      this.setConfigValue('server-portv6', (port + 1).toString());
-      this.port = port;
-      this.save();
+        this.setConfigValue('server-port', port.toString());
+        this.setConfigValue('server-portv6', (port + 1).toString());
+        this.port = port;
+        this.save();
     }
 
     public setMode(mode: BedrockMode | string): void {
         console.log(`Setting game mode to: ${mode}`);
-        
-        this.serverConfiguration = this.serverConfiguration.replace(new RegExp(this.mode.toString(), 'g'), mode.toString());
-        this.mode = mode.toString()
+
+        this.serverConfiguration = this.serverConfiguration.replace(
+            new RegExp(this.mode.toString(), 'g'),
+            mode.toString(),
+        );
+        this.mode = mode.toString();
         this.save();
     }
 
-    public enableDetailedTelemetry() : void {
+    public enableDetailedTelemetry(): void {
         console.log(`Enabling server telemetry`);
 
-        if (this.serverConfiguration.indexOf("emit-server-telemetry") === -1)
-        {
-            this.serverConfiguration += "\r\nemit-server-telemetry=true\r\n";
+        if (this.serverConfiguration.indexOf('emit-server-telemetry') === -1) {
+            this.serverConfiguration += '\r\nemit-server-telemetry=true\r\n';
         }
 
         this.save();
@@ -68,7 +70,7 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
     private loadWorlds(): string[] {
         try {
             return fs.readdirSync(path.join(this.basePath, 'worlds'));
-        } catch (error) {
+        } catch {
             return [];
         }
     }
@@ -79,7 +81,7 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
                 encoding: 'utf8',
                 flag: 'r',
             });
-        } catch (error) {}
+        } catch {}
 
         if (this.serverConfiguration != null) {
             this.world = this.getConfigValue('level-name');
@@ -91,11 +93,11 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
     }
 
     private getConfigValue(config: string): string {
-      const configStart = config +'=';
-      const start = this.serverConfiguration.indexOf(configStart) + configStart.length;
-      const end = this.serverConfiguration.indexOf('\r\n', start);
+        const configStart = config + '=';
+        const start = this.serverConfiguration.indexOf(configStart) + configStart.length;
+        const end = this.serverConfiguration.indexOf('\r\n', start);
 
-      return this.serverConfiguration.slice(start, end);
+        return this.serverConfiguration.slice(start, end);
     }
 
     private save(): void {

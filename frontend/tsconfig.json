@@ -1,13 +1,13 @@
 {
-  "compilerOptions": {
-    "outDir": "./build/front",
-    "sourceMap": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
-    "module": "commonjs",
-    "lib": ["es6", "dom", "es2017"],
-    "target": "es5",
-    "jsx": "react"
-  },
-  "include": ["./**/*", "interfaces/types.ts"  ]
+    "compilerOptions": {
+        "outDir": "./build/front",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "esModuleInterop": true,
+        "module": "commonjs",
+        "lib": ["es6", "dom", "es2017"],
+        "target": "es5",
+        "jsx": "react"
+    },
+    "include": ["./**/*", "interfaces/types.ts"]
 }

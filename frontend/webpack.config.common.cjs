@@ -17,7 +17,8 @@ module.exports = {
             patterns: [
                 { from: 'index.html', to: 'index.html' },
                 { from: 'images/favicon.ico', to: 'favicon.ico' },
-        ]}),
+            ],
+        }),
     ],
 
     module: {

@@ -11,9 +11,7 @@ export const Port: React.FC<ServerPortProps> = (props) => {
 
     return (
         <div className="nes-badge crankshaft-badge">
-            <span className="is-error">
-                {props.port}
-            </span>
+            <span className="is-error">{props.port}</span>
         </div>
     );
 };

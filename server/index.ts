@@ -9,7 +9,7 @@ let configuration: ServerConfiguration;
 
 try {
     configuration = JSONFile.read<ServerConfiguration>('../Configuration.json');
-} catch (error) {
+} catch {
     configuration = JSONFile.read<ServerConfiguration>('./Configuration.json');
 }
 
@@ -18,13 +18,8 @@ app.use(express.json());
 app.use(cors());
 console.log(`Hosting frontend from: ${path.join(__dirname, '../../../frontend/dist')}`);
 app.use(express.static(path.join(__dirname, '../../../frontend/dist')));
-new CrankShaft(app, configuration)
-  .init()
-  .then(() => {
+new CrankShaft(app, configuration).init().then(() => {
     app.listen(configuration.serverPort, () => {
-      console.log(`Listening on port ${configuration.serverPort}`); 
+        console.log(`Listening on port ${configuration.serverPort}`);
     });
-  }
-);
-
-
+});

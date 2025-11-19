@@ -1,10 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { ServerStatus } from '../../interfaces/types';
 
 export interface WorldUploadProps {
     canUpload: boolean;
     isUploading: boolean;
-    serverState?: ServerStatus;
     onUpload: (file: File) => void;
     error?: string | null;
     onRequestStopMessage?: string;
@@ -13,7 +11,6 @@ export interface WorldUploadProps {
 export const WorldUpload: React.FC<WorldUploadProps> = ({
     canUpload,
     isUploading,
-    serverState,
     onUpload,
     error,
     onRequestStopMessage = 'Stop the server before importing a world.',
@@ -78,11 +75,7 @@ export const WorldUpload: React.FC<WorldUploadProps> = ({
                     }
                 }}
             >
-                <p>
-                    {canUpload
-                        ? 'Drag & drop a .mcworld file here or click to browse.'
-                        : onRequestStopMessage}
-                </p>
+                <p>{canUpload ? 'Drag & drop a .mcworld file here or click to browse.' : onRequestStopMessage}</p>
                 <button
                     type="button"
                     className="nes-btn is-primary"
@@ -94,13 +87,7 @@ export const WorldUpload: React.FC<WorldUploadProps> = ({
                 >
                     {isUploading ? 'Uploading...' : 'Select World File'}
                 </button>
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".mcworld"
-                    hidden
-                    onChange={onFileSelected}
-                />
+                <input ref={fileInputRef} type="file" accept=".mcworld" hidden onChange={onFileSelected} />
             </div>
             {error && <p className="nes-text is-error">{error}</p>}
         </>

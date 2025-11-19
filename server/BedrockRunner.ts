@@ -56,7 +56,7 @@ export class BedrockRunner {
 
         try {
             return JSONFile.read<BedrockVersion>(versionFile);
-        } catch (error) {
+        } catch {
             return null;
         }
     }
@@ -80,9 +80,7 @@ export class BedrockRunner {
                     endsWithPartial = true;
                 }
 
-                const logLines = totalLogLine
-                    .split('\r\n')
-                    .filter((l) => l.length > 0);
+                const logLines = totalLogLine.split('\r\n').filter((l) => l.length > 0);
 
                 if (logLines.length > 0) {
                     if (partialLine !== '') {
@@ -94,8 +92,8 @@ export class BedrockRunner {
                         partialLine += logLines.pop();
                     }
 
-                    logLines.forEach((l, i) => {
-                        this._stdout.push(l);
+                    logLines.forEach((line) => {
+                        this._stdout.push(line);
                     });
                 }
             });

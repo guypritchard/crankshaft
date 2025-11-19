@@ -16,7 +16,7 @@ export class BedrockInstaller {
                         entry.pipe(fs.createWriteStream(path.join(basePath, fileName), { flags: 'w' }));
                     } else {
                         if (!fs.existsSync(path.join(basePath, entry.path))) {
-                          console.log(path.join(basePath, entry.path))
+                            console.log(path.join(basePath, entry.path));
                             fs.mkdirSync(path.join(basePath, entry.path), { recursive: true });
                         }
                     }
