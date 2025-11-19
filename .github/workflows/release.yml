@@ -72,7 +72,6 @@ jobs:
           mkdir -p "$PACKAGE_DIR/server"
           cp -R server/dist/server "$PACKAGE_DIR/server"
           cp -R server/dist/interfaces "$PACKAGE_DIR/server/interfaces"
-          cp server/Configuration.json "$PACKAGE_DIR/server/Configuration.json"
           mkdir -p "$PACKAGE_DIR/frontend"
           cp -R frontend/dist "$PACKAGE_DIR/frontend/dist"
 
