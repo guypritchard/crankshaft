@@ -2,7 +2,7 @@ import unzipper from 'unzipper';
 import fs from 'fs';
 import path from 'path';
 import { JSONFile } from './utils/JSONFile.js';
-import { BedrockVersion } from '../interfaces/types.js';
+import { BedrockVersion, MinecraftEdition } from '../interfaces/types.js';
 
 export class BedrockInstaller {
     public async install(version: BedrockVersion, versionCache: string, basePath: string): Promise<void> {
@@ -24,7 +24,10 @@ export class BedrockInstaller {
                 .on('error', reject)
                 .on('finish', resolve)
                 .on('finish', () => {
-                    JSONFile.write(path.join(basePath, 'version.json'), version);
+                    JSONFile.write(path.join(basePath, 'version.json'), {
+                        ...version,
+                        edition: MinecraftEdition.Bedrock,
+                    });
                 });
         });
 

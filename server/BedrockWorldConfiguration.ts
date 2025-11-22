@@ -9,6 +9,8 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
     public mode: string = '';
     public port: number = BEDROCK_DEFAULT_PORT;
     public telemetry: boolean = true;
+    public onlineMode: boolean = true;
+    public contentLogConsoleOutputEnabled: boolean = true;
     private serverConfiguration = '';
 
     public setCurrentWorld(name: string): void {
@@ -44,13 +46,26 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
         this.save();
     }
 
+    public setOnlineMode(onlineMode: boolean): void {
+        console.log(`Setting online-mode to: ${onlineMode}`);
+
+        this.setConfigValue('online-mode', onlineMode ? 'true' : 'false');
+        this.onlineMode = onlineMode;
+        this.save();
+    }
+
+    public setContentLogConsoleOutputEnabled(enabled: boolean): void {
+        console.log(`Setting content-log-console-output-enabled to: ${enabled}`);
+
+        this.setConfigValue('content-log-console-output-enabled', enabled ? 'true' : 'false');
+        this.contentLogConsoleOutputEnabled = enabled;
+        this.save();
+    }
+
     public enableDetailedTelemetry(): void {
         console.log(`Enabling server telemetry`);
 
-        if (this.serverConfiguration.indexOf('emit-server-telemetry') === -1) {
-            this.serverConfiguration += '\r\nemit-server-telemetry=true\r\n';
-        }
-
+        this.setConfigValue('emit-server-telemetry', 'true');
         this.save();
     }
 
@@ -60,6 +75,8 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
 
     constructor(private basePath: string) {
         this.parse();
+        this.ensureContentLogConsoleOutput();
+        this.enableDetailedTelemetry();
         this.worlds = this.loadWorlds();
     }
 
@@ -84,18 +101,59 @@ export class BedrockWorldConfiguration implements WorldConfiguration {
         } catch {}
 
         if (this.serverConfiguration != null) {
-            this.world = this.getConfigValue('level-name');
-            this.port = parseInt(this.getConfigValue('server-port'));
-            this.mode = this.getConfigValue('gamemode');
+            const world = this.getConfigValue('level-name');
+            const portValue = this.getConfigValue('server-port');
+            const mode = this.getConfigValue('gamemode');
+            const onlineMode = this.getConfigValue('online-mode');
+            const contentLogConsoleOutput = this.getConfigValue('content-log-console-output-enabled');
+
+            if (world !== '') {
+                this.world = world;
+            }
+
+            const parsedPort = parseInt(portValue);
+            if (!isNaN(parsedPort)) {
+                this.port = parsedPort;
+            }
+
+            if (mode !== '') {
+                this.mode = mode;
+            }
+
+            if (onlineMode !== '') {
+                this.onlineMode = onlineMode.toLowerCase() === 'true';
+            }
+
+            if (contentLogConsoleOutput !== '') {
+                this.contentLogConsoleOutputEnabled = contentLogConsoleOutput.toLowerCase() === 'true';
+            }
         }
 
         return '';
     }
 
+    private ensureContentLogConsoleOutput(): void {
+        const current = this.getConfigValue('content-log-console-output-enabled');
+        if (current === '') {
+            this.setContentLogConsoleOutputEnabled(true);
+        } else {
+            this.contentLogConsoleOutputEnabled = current.toLowerCase() === 'true';
+        }
+    }
+
     private getConfigValue(config: string): string {
         const configStart = config + '=';
-        const start = this.serverConfiguration.indexOf(configStart) + configStart.length;
+        const startIndex = this.serverConfiguration.indexOf(configStart);
+        if (startIndex === -1) {
+            return '';
+        }
+
+        const start = startIndex + configStart.length;
         const end = this.serverConfiguration.indexOf('\r\n', start);
+
+        if (end === -1) {
+            return this.serverConfiguration.slice(start);
+        }
 
         return this.serverConfiguration.slice(start, end);
     }

@@ -6,6 +6,7 @@ Crankshaft is a Node/React application for provisioning and managing multiple Mi
 
 ## Features
 
+- Bedrock and Java edition servers managed side-by-side with per-instance edition selection
 - Multi-server management with automatic port selection and conflict detection
 - Live Bedrock output viewer with start/stop/update/backup controls
 - `.mcworld` uploads with drag-and-drop import and world switching
@@ -17,6 +18,7 @@ Crankshaft is a Node/React application for provisioning and managing multiple Mi
 - Node.js 18+
 - npm 9+
 - Windows or Linux host capable of running the Bedrock dedicated server
+- Java Runtime Environment for Java edition servers (the host must have `java` on the PATH)
 - Git (optional, for cloning)
 
 ## Getting Started
@@ -40,6 +42,13 @@ npm install --prefix frontend
    ```
 
 2. Navigate to `http://localhost:9000` (or the port configured in `server/Configuration.json`) to open the UI.
+
+## Java Edition servers
+
+- Choose **Java** in the “Create New Server” form to spin up a Java instance (defaults to 2 GB max memory; override as needed).
+- Crankshaft fetches the latest official server JAR, caches it locally, and applies `server.properties` settings (port + online/offline mode).
+- EULA acceptance is automated for managed Java instances so they can start unattended.
+- World uploads and backups remain Bedrock-only for now; stop/start/update/online-mode toggles work for both editions.
 
 ### Production Build
 

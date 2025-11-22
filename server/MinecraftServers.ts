@@ -1,10 +1,12 @@
 import path from 'path';
 import fs from 'fs';
 import dgram from 'dgram';
-import { ServerConfiguration, ServerStatus } from '../interfaces/types';
-import { BedrockState } from './BedrockState';
-import { JSONFile } from './utils/JSONFile';
-import { BEDROCK_DEFAULT_PORT } from './Constants';
+import net from 'net';
+import { ServerConfiguration, ServerStatus, MinecraftEdition } from '../interfaces/types.js';
+import { BedrockState } from './BedrockState.js';
+import { JavaState } from './JavaState.js';
+import { JSONFile } from './utils/JSONFile.js';
+import { BEDROCK_DEFAULT_PORT, JAVA_DEFAULT_PORT } from './Constants.js';
 
 type LegacyPersistedServer = {
     config?: {
@@ -16,15 +18,28 @@ type LegacyPersistedServer = {
 interface PersistedServer {
     id: number;
     port?: number;
+    edition?: MinecraftEdition;
+    maxMemoryMb?: number;
 }
+
+interface CreateServerOptions {
+    port?: number;
+    edition?: MinecraftEdition;
+    maxMemoryMb?: number;
+}
+
+type ManagedServer = {
+    edition: MinecraftEdition;
+    instance: BedrockState | JavaState;
+};
 
 /**
  * This is an extremely naive implementation at this stage...  Persisting state to a file.
  */
-export class BedrockServers {
+export class MinecraftServers {
     private readonly serverList: string = 'servers.json';
     private readonly configPath: string;
-    private state: Map<number, BedrockState> = new Map<number, BedrockState>();
+    private state: Map<number, ManagedServer> = new Map<number, ManagedServer>();
     private reservedPorts: Set<number> = new Set<number>();
 
     public constructor(private config: ServerConfiguration) {
@@ -32,12 +47,17 @@ export class BedrockServers {
     }
 
     private getUsedPorts(): Set<number> {
-        return new Set([...this.state.values()].map((server) => server.getPort()));
+        return new Set([...this.state.values()].map((server) => server.instance.getPort()));
     }
 
-    private async findAvailablePort(requestedPort?: number): Promise<number> {
+    private defaultPort(edition: MinecraftEdition): number {
+        return edition === MinecraftEdition.Java ? JAVA_DEFAULT_PORT : BEDROCK_DEFAULT_PORT;
+    }
+
+    private async findAvailablePort(options?: { requestedPort?: number; edition?: MinecraftEdition }): Promise<number> {
+        const edition = options?.edition ?? MinecraftEdition.Bedrock;
         const usedPorts = this.getUsedPorts();
-        let candidate = requestedPort ?? BEDROCK_DEFAULT_PORT;
+        let candidate = options?.requestedPort ?? this.defaultPort(edition);
 
         while (true) {
             if (usedPorts.has(candidate) || this.reservedPorts.has(candidate)) {
@@ -55,7 +75,7 @@ export class BedrockServers {
         }
     }
 
-    private async isPortAvailable(port: number): Promise<boolean> {
+    private async isUdpAvailable(port: number): Promise<boolean> {
         return new Promise((resolve) => {
             const socket = dgram.createSocket('udp4');
 
@@ -80,6 +100,25 @@ export class BedrockServers {
         });
     }
 
+    private async isTcpAvailable(port: number): Promise<boolean> {
+        return new Promise((resolve) => {
+            const server = net.createServer();
+            server.once('error', () => {
+                server.close();
+                resolve(false);
+            });
+
+            server.listen(port, () => {
+                server.close(() => resolve(true));
+            });
+        });
+    }
+
+    private async isPortAvailable(port: number): Promise<boolean> {
+        const [tcpFree, udpFree] = await Promise.all([this.isTcpAvailable(port), this.isUdpAvailable(port)]);
+        return tcpFree && udpFree;
+    }
+
     private releaseReservedPort(port: number): void {
         this.reservedPorts.delete(port);
     }
@@ -94,18 +133,21 @@ export class BedrockServers {
 
         console.log(`Found: ${persistedServers.length} servers in config.`);
         const startingServers = persistedServers.map(async (server) => {
-            const assignedPort = await this.findAvailablePort(server.port);
-            let bedrockState: BedrockState | null = null;
+            const assignedPort = await this.findAvailablePort({ requestedPort: server.port, edition: server.edition });
+            let managedState: ManagedServer | null = null;
 
             try {
-                bedrockState = new BedrockState(server.id, assignedPort, this.config);
-                this.state.set(server.id, bedrockState);
+                const instance = this.createState(server.edition ?? MinecraftEdition.Bedrock, server.id, assignedPort, {
+                    maxMemoryMb: server.maxMemoryMb,
+                });
+                managedState = { edition: server.edition ?? MinecraftEdition.Bedrock, instance };
+                this.state.set(server.id, managedState);
 
-                await bedrockState.start();
+                await managedState.instance.start();
             } catch (error) {
                 console.error(`Unable to start server ${server.id}:`, error);
-                if (bedrockState != null) {
-                    bedrockState.serverState = ServerStatus.Stopped;
+                if (managedState != null) {
+                    managedState.instance.serverState = ServerStatus.Stopped;
                 }
             } finally {
                 this.releaseReservedPort(assignedPort);
@@ -116,23 +158,42 @@ export class BedrockServers {
         this.persist();
     }
 
-    public getAll(): Array<[number, BedrockState]> {
+    public getAll(): Array<[number, ManagedServer]> {
         return [...this.state.entries()];
     }
 
-    public async addNew(id: number, port: number = BEDROCK_DEFAULT_PORT): Promise<BedrockState> {
+    private createState(
+        edition: MinecraftEdition,
+        id: number,
+        port: number,
+        options?: { maxMemoryMb?: number },
+    ): BedrockState | JavaState {
+        if (edition === MinecraftEdition.Java) {
+            return new JavaState(id, port, this.config, options?.maxMemoryMb);
+        }
+
+        return new BedrockState(id, port, this.config);
+    }
+
+    public async addNew(id: number, options?: CreateServerOptions): Promise<ManagedServer['instance']> {
+        const edition = options?.edition ?? MinecraftEdition.Bedrock;
+        const requestedPort = options?.port ?? this.defaultPort(edition);
+
         if (this.state.get(id) == null) {
-            const assignedPort = await this.findAvailablePort(port);
-            let bedrockState: BedrockState | null = null;
+            const assignedPort = await this.findAvailablePort({ requestedPort, edition });
+            let managedServer: ManagedServer | null = null;
 
             try {
-                bedrockState = new BedrockState(id, assignedPort, this.config);
-                this.state.set(id, bedrockState);
-                await bedrockState.start();
+                const instance = this.createState(edition, id, assignedPort, {
+                    maxMemoryMb: options?.maxMemoryMb,
+                });
+                managedServer = { edition, instance };
+                this.state.set(id, managedServer);
+                await managedServer.instance.start();
                 this.persist();
-                return bedrockState;
+                return managedServer.instance;
             } catch (error) {
-                if (bedrockState != null) {
+                if (managedServer != null) {
                     this.state.delete(id);
                 }
                 throw error;
@@ -140,21 +201,21 @@ export class BedrockServers {
                 this.releaseReservedPort(assignedPort);
             }
         } else {
-            return this.state.get(id)!;
+            return this.state.get(id)!.instance;
         }
     }
 
-    public get(id: number): BedrockState | undefined {
+    public get(id: number): ManagedServer | undefined {
         return this.state.get(id);
     }
 
     public async remove(id: number): Promise<void> {
-        const state = this.state.get(id);
-        if (state == null) {
+        const managedServer = this.state.get(id);
+        if (managedServer == null) {
             return;
         }
 
-        if (state.state().state !== ServerStatus.Stopped) {
+        if (managedServer.instance.state().state !== ServerStatus.Stopped) {
             throw new Error(`Server ${id} must be stopped before removal.`);
         }
 
@@ -166,10 +227,19 @@ export class BedrockServers {
     }
 
     public persist(): void {
-        const serializedState = [...this.state.entries()].map(([id, state]) => ({
-            id,
-            port: state.getPort(),
-        }));
+        const serializedState = [...this.state.entries()].map(([id, managed]) => {
+            const entry: PersistedServer = {
+                id,
+                edition: managed.edition,
+                port: managed.instance.getPort(),
+            };
+
+            if (managed.edition === MinecraftEdition.Java && managed.instance instanceof JavaState) {
+                entry.maxMemoryMb = managed.instance.getMaxMemoryMb();
+            }
+
+            return entry;
+        });
 
         JSONFile.write(this.configPath, serializedState);
     }
@@ -200,6 +270,7 @@ export class BedrockServers {
 
             return {
                 id,
+                edition: MinecraftEdition.Bedrock,
                 port: this.resolvePersistedPort(state as LegacyPersistedServer),
             };
         }
@@ -212,7 +283,9 @@ export class BedrockServers {
 
             return {
                 id: server.id,
+                edition: server.edition ?? MinecraftEdition.Bedrock,
                 port: typeof server.port === 'number' ? server.port : undefined,
+                maxMemoryMb: typeof server.maxMemoryMb === 'number' ? server.maxMemoryMb : undefined,
             };
         }
 

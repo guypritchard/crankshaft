@@ -1,8 +1,9 @@
 import React from 'react';
-import { BedrockVersion } from '../../interfaces/types';
+import { MinecraftEdition, ServerVersion } from '../../interfaces/types';
 
 export interface VersionProps {
-    version: BedrockVersion;
+    version: ServerVersion | null;
+    edition?: MinecraftEdition;
 }
 
 export const Version: React.FC<VersionProps> = (props) => {
@@ -10,9 +11,11 @@ export const Version: React.FC<VersionProps> = (props) => {
         return <div>Unknown</div>;
     }
 
+    const label = props.version.build ?? props.version.version;
+
     return (
         <div className="nes-badge -right crankshaft-badge">
-            <span className="is-primary">{props.version.build}</span>
+            <span className="is-primary">{label}</span>
         </div>
     );
 };

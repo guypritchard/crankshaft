@@ -2,7 +2,7 @@ import { BedrockDownloader } from './BedrockDownloader';
 import { BedrockDownloadPageParser } from './BedrockDownloadPageParser';
 import { BedrockInstaller } from './BedrockInstaller';
 import { BedrockRunner } from './BedrockRunner';
-import { WorldConfiguration, ServerState, ServerStatus, ServerConfiguration } from '../interfaces/types';
+import { ServerState, ServerStatus, ServerConfiguration, MinecraftEdition } from '../interfaces/types';
 import { BedrockWorldConfiguration } from './BedrockWorldConfiguration';
 import path from 'path';
 import { BEDROCK_DEFAULT_PORT } from './Constants';
@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import unzipper, { File as UnzipperFile } from 'unzipper';
 
 export class BedrockState {
-    config: WorldConfiguration | null = null;
+    config: BedrockWorldConfiguration | null = null;
     runner: BedrockRunner;
     process: Promise<void> = Promise.resolve();
     serverState: ServerStatus = ServerStatus.Unknown;
@@ -22,6 +22,16 @@ export class BedrockState {
     ) {
         this.path = path.join(this.configuration?.basePath, this.id.toString(), 'bedrock');
         this.runner = new BedrockRunner(this.path);
+    }
+
+    private ensureConfig(): BedrockWorldConfiguration {
+        if (this.config instanceof BedrockWorldConfiguration) {
+            return this.config;
+        }
+
+        this.config = new BedrockWorldConfiguration(this.path);
+        this.config.setPort(this.port);
+        return this.config;
     }
 
     public getPort(): number {
@@ -70,14 +80,59 @@ export class BedrockState {
     }
 
     public async changeWorld(worldName: string): Promise<boolean> {
-        if (this.config?.world == worldName) {
+        const config = this.ensureConfig();
+        if (config.world === worldName) {
             return false;
         }
 
         await this.stop();
-        this.config?.setCurrentWorld(worldName);
+        config.setCurrentWorld(worldName);
         await this.start();
         return true;
+    }
+
+    public async setOnlineMode(onlineMode: boolean): Promise<ServerState> {
+        const wasRunning = this.serverState === ServerStatus.Running;
+
+        if (wasRunning) {
+            await this.stop();
+        }
+
+        const config = this.ensureConfig();
+        config.setOnlineMode(onlineMode);
+
+        if (wasRunning) {
+            await this.start();
+        }
+
+        return this.state();
+    }
+
+    public async updateSettings(options: {
+        onlineMode?: boolean;
+        contentLogConsoleOutputEnabled?: boolean;
+    }): Promise<ServerState> {
+        const wasRunning = this.serverState === ServerStatus.Running;
+
+        if (wasRunning) {
+            await this.stop();
+        }
+
+        const config = this.ensureConfig();
+
+        if (typeof options.onlineMode === 'boolean') {
+            config.setOnlineMode(options.onlineMode);
+        }
+
+        if (typeof options.contentLogConsoleOutputEnabled === 'boolean') {
+            config.setContentLogConsoleOutputEnabled(options.contentLogConsoleOutputEnabled);
+        }
+
+        if (wasRunning) {
+            await this.start();
+        }
+
+        return this.state();
     }
 
     public async update(): Promise<boolean> {
@@ -101,7 +156,8 @@ export class BedrockState {
         console.log('Installed version: ' + currentVersion?.build);
         console.log('Latest windows version:' + windowsBuild[0].build);
 
-        this.config = new BedrockWorldConfiguration(this.path);
+        const config = this.ensureConfig();
+        this.config = config;
         this.config.setPort(this.port);
 
         if (windowsBuild[0].build !== currentVersion?.build) {
@@ -111,9 +167,11 @@ export class BedrockState {
             await installer.install(windowsBuild[0], this.configuration?.versionCache, this.path);
 
             // Set configuration back to what it was before the upgrade.
-            this.config?.setCurrentWorld(this.config?.world);
-            this.config?.setMode(this.config?.mode);
-            this.config?.enableDetailedTelemetry();
+            config.setCurrentWorld(config.world);
+            config.setMode(config.mode);
+            config.enableDetailedTelemetry();
+            config.setOnlineMode(config.onlineMode ?? true);
+            config.setContentLogConsoleOutputEnabled(config.contentLogConsoleOutputEnabled ?? true);
 
             await this.start();
             return true;
@@ -241,6 +299,7 @@ export class BedrockState {
         this.config?.refreshWorlds();
 
         return {
+            edition: MinecraftEdition.Bedrock,
             state: this.serverState,
             pid: this.runner.pid,
             stdout: this.runner.stdout,

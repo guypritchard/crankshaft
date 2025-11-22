@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Server } from './Server';
 import '../styles.scss';
 import { Header } from './Header';
-import { BedrockVersion, ServerState, ServerStatus } from '../../interfaces/types';
+import { BedrockVersion, MinecraftEdition, ServerState, ServerStatus } from '../../interfaces/types';
 import useFetch from 'react-fetch-hook';
 import { CreateServer } from './CreateServer';
 
@@ -24,7 +24,12 @@ export const App: React.FC = () => {
         setRefreshIndex((current) => current + 1);
     }, []);
 
-    const createServer = async (serverId: number, port?: number): Promise<void> => {
+    const createServer = async (
+        serverId: number,
+        port?: number,
+        edition: MinecraftEdition = MinecraftEdition.Bedrock,
+        maxMemoryMb?: number,
+    ): Promise<void> => {
         setIsCreating(true);
         try {
             const response = await fetch(`/servers/${serverId}`, {
@@ -32,7 +37,7 @@ export const App: React.FC = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ port }),
+                body: JSON.stringify({ port, edition, maxMemoryMb }),
             });
 
             if (response.ok === false) {
@@ -124,6 +129,8 @@ export const App: React.FC = () => {
                                 const isActive = activeServer?.id === server.id;
                                 const isRunning = server.state?.state === ServerStatus.Running;
                                 const tabStyle = isActive ? 'is-primary' : isRunning ? 'is-dark' : 'is-error';
+                                const editionLabel =
+                                    server.state?.edition === MinecraftEdition.Java ? 'Java' : 'Bedrock';
 
                                 return (
                                     <button
@@ -135,7 +142,7 @@ export const App: React.FC = () => {
                                         }}
                                         type="button"
                                     >
-                                        Server {server.id}
+                                        Server {server.id} ({editionLabel})
                                     </button>
                                 );
                             })}

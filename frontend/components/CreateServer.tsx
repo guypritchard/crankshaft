@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Spinner } from './Spinner';
+import { MinecraftEdition } from '../../interfaces/types';
 
 export interface CreateServerProps {
-    onCreate: (id: number, port?: number) => Promise<void>;
+    onCreate: (id: number, port?: number, edition?: MinecraftEdition, maxMemoryMb?: number) => Promise<void>;
     isBusy: boolean;
     suggestedServerId?: number;
 }
@@ -10,6 +11,8 @@ export interface CreateServerProps {
 export const CreateServer: React.FC<CreateServerProps> = ({ onCreate, isBusy, suggestedServerId }) => {
     const [serverId, setServerId] = useState('');
     const [port, setPort] = useState('');
+    const [edition, setEdition] = useState<MinecraftEdition>(MinecraftEdition.Bedrock);
+    const [maxMemoryMb, setMaxMemoryMb] = useState('2048');
     const [error, setError] = useState<string | null>(null);
     const [autoPort, setAutoPort] = useState(true);
 
@@ -33,6 +36,8 @@ export const CreateServer: React.FC<CreateServerProps> = ({ onCreate, isBusy, su
 
         const parsedId = Number(serverId);
         const parsedPort = autoPort || port.trim().length === 0 ? undefined : Number(port);
+        const parsedMemory =
+            edition === MinecraftEdition.Java && maxMemoryMb.trim().length > 0 ? Number(maxMemoryMb) : undefined;
 
         if (Number.isNaN(parsedId)) {
             setError('Server ID must be a number.');
@@ -49,10 +54,17 @@ export const CreateServer: React.FC<CreateServerProps> = ({ onCreate, isBusy, su
             return;
         }
 
+        if (edition === MinecraftEdition.Java && parsedMemory != null && Number.isNaN(parsedMemory)) {
+            setError('Memory must be a number of megabytes.');
+            return;
+        }
+
         try {
-            await onCreate(parsedId, parsedPort);
+            await onCreate(parsedId, parsedPort, edition, parsedMemory);
             setServerId('');
             setPort('');
+            setEdition(MinecraftEdition.Bedrock);
+            setMaxMemoryMb('2048');
             setAutoPort(true);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unable to create server.';
@@ -88,7 +100,7 @@ export const CreateServer: React.FC<CreateServerProps> = ({ onCreate, isBusy, su
                         placeholder="Leave blank to auto-select"
                         disabled={autoPort}
                     />
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <label className="crankshaft-inline-control">
                         <input
                             type="checkbox"
                             className="nes-checkbox"
@@ -104,6 +116,50 @@ export const CreateServer: React.FC<CreateServerProps> = ({ onCreate, isBusy, su
                         <span>Auto select port</span>
                     </label>
                 </div>
+                <div className="nes-field full-row">
+                    <label>Edition</label>
+                    <div className="crankshaft-choice-group">
+                        <label className="crankshaft-inline-control">
+                            <input
+                                type="radio"
+                                className="nes-radio"
+                                name="edition"
+                                value={MinecraftEdition.Bedrock}
+                                checked={edition === MinecraftEdition.Bedrock}
+                                onChange={() => setEdition(MinecraftEdition.Bedrock)}
+                            />
+                            <span>Bedrock</span>
+                        </label>
+                        <label className="crankshaft-inline-control">
+                            <input
+                                type="radio"
+                                className="nes-radio"
+                                name="edition"
+                                value={MinecraftEdition.Java}
+                                checked={edition === MinecraftEdition.Java}
+                                onChange={() => setEdition(MinecraftEdition.Java)}
+                            />
+                            <span>Java</span>
+                        </label>
+                    </div>
+                </div>
+
+                {edition === MinecraftEdition.Java && (
+                    <div className="nes-field">
+                        <label htmlFor="create-server-memory">Max memory (MB)</label>
+                        <input
+                            id="create-server-memory"
+                            type="number"
+                            className="nes-input"
+                            value={maxMemoryMb}
+                            onChange={(event) => setMaxMemoryMb(event.target.value)}
+                            placeholder="e.g. 2048"
+                        />
+                        <p className="nes-text is-warning" style={{ marginTop: '0.25rem' }}>
+                            Java edition requires a local Java runtime. Crankshaft will accept the EULA automatically.
+                        </p>
+                    </div>
+                )}
                 <button type="submit" className="nes-btn is-primary" disabled={isBusy}>
                     Create
                 </button>

@@ -1,7 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { BedrockVersion } from '../interfaces/types.js';
+import { BedrockVersion, MinecraftEdition } from '../interfaces/types.js';
 import { JSONFile } from './utils/JSONFile.js';
 import { wait } from './utils/Wait.js';
 
@@ -55,7 +55,8 @@ export class BedrockRunner {
         }
 
         try {
-            return JSONFile.read<BedrockVersion>(versionFile);
+            const version = JSONFile.read<BedrockVersion>(versionFile);
+            return { ...version, edition: version.edition ?? MinecraftEdition.Bedrock };
         } catch {
             return null;
         }
